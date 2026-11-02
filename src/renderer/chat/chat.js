@@ -270,6 +270,7 @@ function showConfirm({ id, text }) {
   scroll();
 }
 api.helperState().then(renderHelper);
+api.helperTakeOpenPicker().then((p) => p && openPicker());
 
 api.onAiStatus(refreshStatus);
 api.onSettings((s) => {

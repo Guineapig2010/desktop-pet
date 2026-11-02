@@ -68,6 +68,8 @@ contextBridge.exposeInMainWorld('buddy', {
   onHelperStatus: on('helper:status'),
   onHelperConfirm: on('helper:confirm'),
   onHelperOpenPicker: on('helper:open-picker'),
+  helperTakeOpenPicker: () => ipcRenderer.invoke('helper:take-open-picker'),
+  helperRequestPicker: () => ipcRenderer.send('helper:open-picker'),
 
   // photo importer
   importerChoose: () => ipcRenderer.invoke('importer:choose'),

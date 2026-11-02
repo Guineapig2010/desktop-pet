@@ -84,6 +84,26 @@ $('resetStory').addEventListener('click', async () => {
   $('resetStory').textContent = 'Storyline reset ✓';
 });
 $('quitBtn').addEventListener('click', () => api.quit());
+async function perms() {
+  const p = await api.helperPermissions();
+  const show = (id, ok, text) => {
+    $(id).textContent = text;
+    $(id).className = `result ${ok ? 'ok' : 'bad'}`;
+  };
+  if (p.platform !== 'darwin') {
+    show('permScreen', true, 'not needed on this system');
+    show('permAx', p.input.available, p.input.available ? 'available' : p.input.reason);
+    $('openScreenPerm').style.display = $('openAxPerm').style.display = 'none';
+    return;
+  }
+  show('permScreen', p.screen === 'granted', p.screen === 'granted' ? '✓ allowed' : p.screen === 'not-determined' ? 'not asked yet (macOS asks the first time)' : '✗ not allowed');
+  show('permAx', p.accessibility, p.accessibility ? '✓ allowed' : '✗ not allowed (explain/point still work)');
+}
+$('openScreenPerm').addEventListener('click', () => api.helperOpenPermission('screen'));
+$('openAxPerm').addEventListener('click', () => api.helperOpenPermission('accessibility'));
+$('shareBtn').addEventListener('click', () => api.helperRequestPicker());
+window.addEventListener('focus', perms);
+perms();
 document.querySelectorAll('a[data-url]').forEach((a) => a.addEventListener('click', (e) => {
   e.preventDefault();
   api.openExternal(a.dataset.url);

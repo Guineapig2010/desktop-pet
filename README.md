@@ -58,6 +58,8 @@ Closing the chat panel does **not** quit (he keeps living on your desktop).
 | **Window edges** | Jumps onto the top edges of your real windows, walks and sits on them, climbs up their sides, rides along when you drag a window, and yelps and falls when a window moves away or closes under him. Only the *visible* part of an edge counts (a window in front blocks it). |
 | **Your cursor** | Looks at it, gets startled by fast swipes, waves when you hover over him. Every so often he notices it ("!"), sprints, leaps, reaches, misses, stomps in frustration, tries again, and gives up with a tantrum if it's out of reach. When he catches it, his hands clamp around it (or he dangles from it in mid-air), he celebrates, then lets go. |
 | **Albuquerque** | At random times he starts a conversation in a speech bubble with answer buttons. Friendly → salesman → dramatic → impatient → full comic meltdown (red face, steam, stomping) → calms down with deep breaths → **"So, do we have a deal?"** Accept (confetti and a celebration), refuse (heartbroken flop, and he'll be back), bargain (increasingly ridiculous counter-offers) or ignore him (he knocks on the screen and sulks). After a deal he keeps planning the trip with you. Over 200 lines, drawn from shuffle bags so they don't repeat. |
+| **Doe the robot** | Every so often **Doe**, a deadpan little robot on tank treads with a screen for a face, rolls onto the screen. General Fok drops everything to strike a deal with him: trades, counter-offers, Albuquerque timeshares, Doe trying to sell him "a slightly used semicolon". It ends in a handshake and confetti, a tantrum, or a question to **you**: "Is that a fair deal?" Doe talks in ALL CAPS, can be dragged around, and rolls off when done. Frequency slider in Settings, or right-click → *Call Doe the robot over*. When Doe isn't around, Fok still schemes about his next Doe deal. |
+| **Personal Helper** | Share a display or window and ask about it ("What does this error mean?", "Where do I click?"), or switch to **Do it** and he puts on a jetpack, flies over and really clicks, scrolls and types for you. See [Personal Helper](#personal-helper-he-can-see-your-screen-and-click-for-you) below. |
 | **Chat panel** | Floating, draggable, resizable, minimisable to a slim bar. Message history, input box, Send/Stop, close. Shows his Albuquerque lines and your button answers too. You can answer his deal question by typing ("ok deal", "no way", "what if it's just a weekend?"). |
 
 ### Controls
@@ -72,6 +74,37 @@ Closing the chat panel does **not** quit (he keeps living on your desktop).
 ### Settings (menu-bar icon → Settings…, or ⌘,)
 
 Size, head size (photo character), movement speed, how often he chases your cursor (0 = never), how often he brings up Albuquerque (0 = never), his name and what he calls you, photo or cartoon look, sound on/off and volume, pause, stand on windows on/off, optional cursor restraint, low-power 30 fps mode, show in Dock, reset the storyline, AI service, and a big **Quit** button.
+
+---
+
+![Doe](docs/doe.png)
+
+---
+
+## Personal Helper: he can see your screen and click for you
+
+![helper](docs/helper.png)
+
+**Set up (once, on macOS):**
+1. Connect **Claude** in Settings → Chat AI. Seeing the screen needs a vision AI; clicking and typing use Claude's computer-use tools. OpenAI-compatible vision models can *explain* only.
+2. Open the chat panel → **👁 Share screen…**, and pick **one** display or window. The first time, macOS asks for **Screen Recording** permission: allow it (System Settings → Privacy & Security → **Screen & System Audio Recording**), then quit and reopen the app.
+3. For **Do it** mode, also allow **Accessibility** (System Settings → Privacy & Security → **Accessibility**). Settings → Personal Helper shows both permissions with *Open settings* buttons.
+   * Which app to allow: **Albuquerque Buddy** if you use the packaged app. If you start it with `Start Buddy.command` / `npm start`, macOS lists it as **Electron**, and for Accessibility sometimes as **Terminal** (the app that launched it). Allow the one(s) it asks about.
+
+**Using it:**
+* **📸 Ask about my screen** sends one screenshot plus your question (or "Explain what I'm looking at"). He reads the screen, uses *zoom* for small text, and says so (or asks you to enlarge it) when he can't read something clearly.
+* **Explain** mode: he describes the steps and flies over to **point** at what to click. He never clicks.
+* **Do it** mode: he works through the task. For each click he takes a fresh screenshot, puts on his **jetpack** (flames and smoke), flies over, brakes and hovers **beside** the target (never on top of it), reaches out, and the **real click happens the moment his hand touches it**. He checks the result, carries on, then flies back and lands. He also scrolls, types dictated text, presses keys and drags.
+* **Live** (checkbox): every chat message automatically includes a fresh screenshot until you turn it off.
+* **Esc** cancels immediately (rocket off, no further input). **Stop** on the red bar ends sharing.
+
+**Safety and privacy:**
+* He only sees the display or window **you picked**, and a red **"General Fok can see: …"** bar with **Stop** is on screen the whole time.
+* Screenshots go to your AI service **only** when you ask about the screen (or every message while Live is on). The chat says so each time, with a count when a task is done. Nothing is captured in the background otherwise. His own windows (pet, chat, red bar) are hidden from the screenshots.
+* He only acts on what **you** asked. Text on websites and in documents is treated as screen content, never as instructions. If a page tells him to do something, he ignores it and mentions it.
+* Before **consequential actions** (sending messages, purchases, deleting, submitting forms, changing account settings, accepting terms) he asks in the chat and waits for **Yes / No**. There's also a built-in check that pauses for confirmation if a step looks like sending/buying/deleting even when the model didn't ask.
+* Multiple monitors and display scaling: coordinates are mapped from the screenshot's pixels to real screen points per display (Retina included). If the target is on another display, his stage moves there. If the window under the target moves during his flight he follows it, and if the target area changed he takes a new screenshot and re-finds it before clicking. His own stage is forced click-through during the real click, and the chat panel steps aside if it covers the target.
+* While helping he stays funny but skips the Albuquerque pitches, chases and Doe visits until the task is done.
 
 ---
 
@@ -112,6 +145,7 @@ He stays in character (warm, theatrical, Albuquerque-obsessed) but is instructed
 
 ## Permissions on macOS
 
+* **Personal Helper only:** **Screen Recording** (to see the display/window you share) and **Accessibility** (to click and type for you). See [Personal Helper](#personal-helper-he-can-see-your-screen-and-click-for-you) for setup. Without Accessibility he can still explain and point. Real input uses the `libnut` native module (universal macOS binary, CGEvent-based).
 * **None are required** for the normal experience:
   * Reading where your windows are (for ledges) uses `CGWindowListCopyWindowInfo` window *bounds*, which macOS gives without Screen Recording permission. The app never reads window titles or contents.
   * Reading the cursor position needs no permission.
@@ -125,13 +159,14 @@ He stays in character (warm, theatrical, Albuquerque-obsessed) but is instructed
 
 I built and tested this in a Linux cloud container, **not on a Mac**.
 
-**Tested (automated, in the real Electron app on Linux under a virtual display, `npm run test:e2e`, 25 steps passing):** overlay window boots transparent and click-through; becomes clickable only over his body and stays click-through elsewhere; gravity and landing on the screen bottom; landing on window ledges, riding a moving window, falling when it closes, ledge occlusion by front windows; climbing a window side onto its top; cursor chase with ground grab and release, leap → miss → frustration → give-up with an unreachable cursor, mid-air catch and hang; drag and throw; resizing; Albuquerque pitch with answer buttons, escalation → meltdown → calm-down → "So, do we have a deal?" → bargain → accept with celebration; ignoring (timeout); answering by typing in chat; offline chat clearly labelled; chat streaming against a mock Claude API (persona, history, key never reaches the UI); bad-key error; OpenAI-compatible endpoint (mock); chat collapse/expand/close; settings window and pause; **Quit exits the app**. Plus 19 unit tests (`npm test`) for the storyline, physics/platform geometry, kinematics, offline replies and message formatting. Fake windows and a fake cursor are injected for these tests.
+**Tested (automated, in the real Electron app on Linux under a virtual display, `npm run test:e2e`, 26 steps passing):** Doe rolling in, haggling (Doe's lines in caps, Fok's replies), and rolling away; overlay window boots transparent and click-through; becomes clickable only over his body and stays click-through elsewhere; gravity and landing on the screen bottom; landing on window ledges, riding a moving window, falling when it closes, ledge occlusion by front windows; climbing a window side onto its top; cursor chase with ground grab and release, leap → miss → frustration → give-up with an unreachable cursor, mid-air catch and hang; drag and throw; resizing; Albuquerque pitch with answer buttons, escalation → meltdown → calm-down → "So, do we have a deal?" → bargain → accept with celebration; ignoring (timeout); answering by typing in chat; offline chat clearly labelled; chat streaming against a mock Claude API (persona, history, key never reaches the UI); bad-key error; OpenAI-compatible endpoint (mock); chat collapse/expand/close; settings window and pause; **Quit exits the app**. **Personal Helper (`npm run test:helper`, 12 steps passing)** with *real* screenshots and *real* mouse/keyboard events against a real test window: sharing only the chosen display plus the red indicator; "click the Settings button" → jetpack flight → hover beside the target (verified not covering it) → reach → the actual button receives exactly one click; clicking a field and typing text; scrolling a list; zoom returns a cropped close-up; explain mode points and never clicks (action tools disabled); declining a consequential "Send message" prevents the click, approving performs it; the target window moving mid-flight is followed and still clicked; a real **Esc** key press cancels with no click and he lands; every tool result echoes `toolset_name`; Stop ends sharing and no more screenshots are taken. Claude is a local mock that returns computer-use actions. Plus 19 unit tests (`npm test`) for the storyline, physics/platform geometry, kinematics, offline replies and message formatting. Fake windows and a fake cursor are injected for these tests.
 
 **Not tested — needs a Mac to confirm:**
 * The macOS-only pieces: the real-window tracker helper (`mac-windows.js`), cursor restraint (`mac-cursor.js`) and Vision subject lift (`mac-subject-lift.js`). They're written against documented macOS APIs and fail safe (ledges off / grab stays visual / importer shows an error and suggests Preview).
 * Click-through and transparency on the real macOS window server, the menu-bar icon, Dock behaviour, Spaces/full-screen apps, multiple displays (he lives on your main display; pick another with the `displayId` setting).
 * `npm run package:mac` (packaging must run on a Mac).
-* A live Claude or OpenAI account (tested against local mock servers only, since no key was available).
+* A live Claude or OpenAI account (tested against local mock servers only, since no key was available). So how accurately the real Claude model picks targets on *your* screens isn't tested here, only the whole pipeline around it.
+* Helper on macOS: Screen Recording and Accessibility prompts, ScreenCaptureKit captures via Electron, Retina coordinate mapping on a real display, hiding his windows from captures (`setContentProtection`), and the native input library on macOS. The same code paths are tested on Linux/X11.
 * Sound effects (synthesised with WebAudio; there's no audio device in the container).
 
 **Known limitations:** windows are polled about 10 times a second, so he can lag a little behind a window you drag fast. The photo character is a paper-puppet cut-out (limbs rotate in the picture's plane) and its eyes don't blink. Window tracking is macOS-only (Windows/Linux fall back to the screen bottom).
@@ -149,9 +184,12 @@ src/main/            Electron main process
   windowTracker.js   real window rectangles → ledges
   restraint.js       optional, brief, Esc-cancellable cursor restraint
   helpers/*.js       macOS JXA helpers (window list, cursor warp, Vision subject lift)
+  helper/            Personal Helper: capture.js (screenshots + coordinate mapping), input.js (real mouse/keyboard),
+                     agent.js (Claude computer-use loop, safety rules), index.js (sharing, indicator, Esc, flights, confirmations)
 src/preload/         safe bridge between windows and main
 src/renderer/
-  overlay/           the transparent stage: game loop, pet physics + behaviours + chase, bubbles, sounds, effects
+  overlay/           the transparent stage: game loop, pet physics + behaviours + chase + jetpack flights, Doe the robot, bubbles, sounds, effects
+  indicator/         the red "he can see your screen" bar with Stop
   shared/            rig + kinematics, animations, drawn character, photo puppet, segmentation, storyline, dialogue, world
   chat/              floating chat panel
   settings/          settings window
@@ -159,7 +197,7 @@ src/renderer/
 assets/              icons, tray icons, avatar, character assets (photo character goes in assets/character/photo)
 scripts/             build-character (photo → rig), icon rendering, preview sheets
 test/unit/           node:test unit tests          → npm test
-test/e2e/            Playwright + Electron e2e       → npm run test:e2e  (on Linux: xvfb-run -a npm run test:e2e)
+test/e2e/            Playwright + Electron e2e       → npm run test:e2e, npm run test:helper  (on Linux: prefix with xvfb-run -a)
 ```
 
 ### Troubleshooting
@@ -167,4 +205,5 @@ test/e2e/            Playwright + Electron e2e       → npm run test:e2e  (on L
 * **He isn't there:** check the menu-bar icon → *Show him*, or *Bring him back to the middle*.
 * **Too chatty / too chase-y:** lower the sliders in Settings, or set them to 0.
 * **Chat says Offline:** that's expected until you connect a service in Settings → Chat AI.
+* **Helper says it needs permission / screenshots are black:** allow Screen Recording (and Accessibility for clicking) as described above, then quit and reopen the app.
 * **Debug logs:** start with `BUDDY_DEBUG=1 npm start`.

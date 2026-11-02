@@ -185,6 +185,16 @@ function openChat() {
   return chatWin;
 }
 
+let pickerPending = false;
+function openSharePicker() {
+  pickerPending = true;
+  const w = openChat();
+  if (!w.webContents.isLoading()) {
+    pickerPending = false;
+    w.webContents.send('helper:open-picker');
+  }
+}
+
 function openSettings() {
   if (settingsWin && !settingsWin.isDestroyed()) {
     settingsWin.show();
@@ -251,7 +261,7 @@ function petMenuTemplate() {
     { label: 'Talk about Albuquerque', click: () => command('talk') },
     { label: 'Chase my cursor!', click: () => command('chase') },
     { label: 'Call Doe the robot over', click: () => command('doe') },
-    { label: 'Personal Helper: share my screen…', click: () => openChat()?.webContents.send('helper:open-picker') },
+    { label: 'Personal Helper: share my screen…', click: () => openSharePicker() },
     ...(helper?.source ? [{ label: 'Stop screen sharing', click: () => helper.stopSharing() }] : []),
     { type: 'separator' },
     { label: 'Bigger', click: () => applySettings({ size: Math.min(3, Math.round(s.size * 1.15 * 100) / 100) }) },
@@ -524,6 +534,12 @@ function registerIpc() {
   // personal helper
   ipcMain.on('helper:event', (e, { name, data }) => helper.onOverlayEvent(name, data));
   ipcMain.handle('helper:state', () => helper.state());
+  ipcMain.handle('helper:take-open-picker', () => {
+    const p = pickerPending;
+    pickerPending = false;
+    return p;
+  });
+  ipcMain.on('helper:open-picker', () => openSharePicker());
   ipcMain.handle('helper:sources', () => helper.sources());
   ipcMain.handle('helper:share', (e, src) => helper.share(src));
   ipcMain.handle('helper:stop', () => helper.stopSharing());
