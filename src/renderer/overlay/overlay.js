@@ -12,6 +12,7 @@ import { Effects } from './effects.js';
 import { Bubble } from './bubble.js';
 import { Sound } from './sound.js';
 import { Robot } from './robot.js';
+import { Crates, drawCrate } from './crates.js';
 import { DealScenes } from '../shared/dealScenes.js';
 
 const api = window.buddy;
@@ -95,6 +96,36 @@ const host = {
 
 const pet = new Pet({ world, character, settings, fx, host });
 const robot = new Robot({ world, settings, fx, sound });
+const crates = new Crates({ world, fx, sound });
+pet.crates = crates;
+
+function syncCratePlatforms() {
+  if (!crates.changed) return;
+  crates.changed = false;
+  world.setCratePlatforms(crates.platforms());
+  // he may be standing on a crate whose platform object was rebuilt (or removed)
+  if (pet.mode === 'ground' && pet.platform?.kind === 'crate') {
+    const p = world.platforms.find((x) => x.id === pet.platform.id);
+    if (p) {
+      pet.platform = p;
+      pet.y = p.y;
+    } else pet.fallOff();
+  }
+}
+
+function spawnCrate(x, y) {
+  const size = pet.H * 0.48;
+  if (x == null || x < 0 || x > world.width || y < 0 || y > world.height) {
+    x = clamp(pet.x + pet.facing * pet.H * (0.8 + Math.random()), size, world.width - size);
+    y = Math.max(size, pet.y - pet.H * 2.2);
+  }
+  crates.spawn(x, y, size);
+  if (!conv.active && !helper.active && pet.cool('crateSpawnLine', 5)) host.say('crateSpawn');
+  clearTimeout(spawnCrate.t);
+  spawnCrate.t = setTimeout(() => {
+    if (!conv.active && !helper.active && !settings.paused && pet.cool('buildPrompt', 4)) pet.startBuild();
+  }, 1800);
+}
 const doeBubble = new Bubble(ui, 'robot');
 const deals = new DealScenes();
 await loadCharacter(init.character);
@@ -369,6 +400,8 @@ function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000);
   last = now;
 
+  crates.update(dt);
+  syncCratePlatforms();
   pet.update(dt);
   robot.update(dt);
   fx.update(dt);
@@ -392,6 +425,15 @@ function frame(now) {
   const b = pet.bounds();
   const fb = fx.bounds;
   const dirty = fb ? { x1: Math.min(b.x1, fb.x1), y1: Math.min(b.y1, fb.y1), x2: Math.max(b.x2, fb.x2), y2: Math.max(b.y2, fb.y2) } : b;
+  const cb = crates.bounds();
+  if (cb || crates.hadAny) {
+    const r = cb || crates.hadAny;
+    dirty.x1 = Math.min(dirty.x1, r.x1);
+    dirty.y1 = Math.min(dirty.y1, r.y1);
+    dirty.x2 = Math.max(dirty.x2, r.x2);
+    dirty.y2 = Math.max(dirty.y2, r.y2);
+  }
+  crates.hadAny = cb;
   if (robot.present || robot.wasPresent) {
     const rb = robot.bounds();
     dirty.x1 = Math.min(dirty.x1, rb.x1);
@@ -411,8 +453,10 @@ function frame(now) {
     if (r) ctx.clearRect(r.x1 - 4, r.y1 - 4, r.x2 - r.x1 + 8, r.y2 - r.y1 + 8);
   }
   lastDirty = dirty;
+  for (const c of crates.list) if (c.state !== 'carried') drawCrate(ctx, c);
   robot.draw(ctx);
   pet.draw(ctx);
+  for (const c of crates.list) if (c.state === 'carried') drawCrate(ctx, c);
   fx.draw(ctx);
   if (robot.present) {
     const rt = robot.headTopWorld();
@@ -436,6 +480,7 @@ function overInteractive(x, y) {
   if (pet.drag.active) return true;
   if (pet.hitTest(x, y)) return true;
   if (robot.drag.active || robot.hitTest(x, y)) return true;
+  if (crates.drag || crates.hitTest(x, y)) return true;
   if (bubble.visible) {
     const r = bubble.rect();
     if (x >= r.left - 4 && x <= r.right + 4 && y >= r.top - 4 && y <= r.bottom + 4) return true;
@@ -450,6 +495,12 @@ api.onCursor(({ x, y }) => {
 
 canvas.addEventListener('mousedown', (e) => {
   if (e.button !== 0) return;
+  const crateHit = !pet.hitTest(e.clientX, e.clientY) && crates.hitTest(e.clientX, e.clientY);
+  if (crateHit) {
+    crates.startDrag(crateHit, e.clientX, e.clientY);
+    document.body.classList.add('dragging');
+    return;
+  }
   if (!pet.hitTest(e.clientX, e.clientY) && robot.hitTest(e.clientX, e.clientY)) {
     robot.startDrag(e.clientX, e.clientY);
     robotDownAt = { x: e.clientX, y: e.clientY, t: performance.now() };
@@ -466,8 +517,14 @@ canvas.addEventListener('mousedown', (e) => {
 let downAt = null;
 let robotDownAt = null;
 window.addEventListener('mousemove', (e) => {
+  if (crates.drag) crates.moveDrag(e.clientX, e.clientY);
   if (pet.drag.active) pet.moveDrag(e.clientX, e.clientY);
   if (robot.drag.active) robot.moveDrag(e.clientX, e.clientY);
+});
+window.addEventListener('mouseup', () => {
+  if (!crates.drag) return;
+  crates.endDrag();
+  document.body.classList.remove('dragging');
 });
 window.addEventListener('mouseup', (e) => {
   if (!robot.drag.active) return;
@@ -501,6 +558,14 @@ let clickTimer = null;
 
 canvas.addEventListener('contextmenu', (e) => {
   e.preventDefault();
+  const c = !pet.hitTest(e.clientX, e.clientY) && crates.hitTest(e.clientX, e.clientY);
+  if (c) {
+    const standing = pet.mode === 'ground' && pet.platform?.crateId === c.id;
+    if (c.carriedBy) pet.dropCarried();
+    crates.remove(c.id);
+    if ((standing || pet.action?.constructor?.name === 'Build') && !conv.active && pet.cool('crateRemovedLine', 4)) host.say('crateRemoved');
+    return;
+  }
   if (pet.hitTest(e.clientX, e.clientY)) api.showContextMenu();
 });
 window.addEventListener('wheel', (e) => {
@@ -560,6 +625,15 @@ api.onCommand(async ({ cmd, data }) => {
   switch (cmd) {
     case 'talk':
       if (!(await runConversation())) speak("Hang on, I'm busy! Ask me again in a sec.", { priority: 1 });
+      break;
+    case 'spawnCrate':
+      spawnCrate(data?.x, data?.y);
+      break;
+    case 'clearCrates':
+      crates.clear();
+      break;
+    case 'build':
+      if (!pet.startBuild()) speak(crates.list.length < 2 ? 'I need at least two crates! Press ⌥3.' : 'Hang on, I\'m busy!', { priority: 1 });
       break;
     case 'doe':
       if (robot.present && !conv.active) robot.leave();
@@ -647,6 +721,7 @@ setInterval(() => {
     holding: pet.holdingCursor,
     conversing: conv.active,
     convKind: conv.kind || null,
+    crates: crates.list.map((c) => ({ id: c.id, x: Math.round(c.x), y: Math.round(c.y), state: c.state })),
     doe: robot.present ? { x: Math.round(robot.x), mode: robot.mode, anim: robot.anim, face: robot.face, bubble: doeBubble.visible ? doeBubble.fullText : null, leaving: robot.leaving } : null,
     storySummary: story.summary(),
     stage: story.stage,
@@ -658,5 +733,5 @@ setInterval(() => {
 }, 500);
 
 // test / debug handle
-window.__buddy = { pet, world, story, bubble, conv, runConversation, fx, settings, actions, robot, doeBubble, runDoeScene, doe, get character() { return character; } };
+window.__buddy = { pet, world, story, bubble, conv, runConversation, fx, settings, actions, robot, doeBubble, runDoeScene, doe, crates, spawnCrate, get character() { return character; } };
 api.log(`overlay ready ${world.width}x${world.height} @${dpr}x, character=${character.kind}`);

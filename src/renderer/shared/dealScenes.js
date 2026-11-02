@@ -111,22 +111,24 @@ export class DealScenes {
   constructor() {
     this.bags = {};
   }
-  n(key) {
-    const src = T[key] || ITEMS[key];
-    if (!this.bags[key]) this.bags[key] = new ShuffleBag(src);
-    return this.bags[key].next();
+  /** Next line template (T) or, with item=true, next item (ITEMS). Separate bags: some names exist in both. */
+  n(key, item = false) {
+    const src = item ? ITEMS[key] : T[key];
+    const bag = `${item ? 'i' : 't'}:${key}`;
+    if (!this.bags[bag]) this.bags[bag] = new ShuffleBag(src);
+    return this.bags[bag].next();
   }
 
   /** Build a scene. vars: { user } */
   scene(vars = {}) {
     const v = {
       user: vars.user || 'pal',
-      fokItem: this.n('fokItem'),
-      fokItem2: this.n('fokItem'),
-      doeItem: this.n('doeItem'),
-      counter: this.n('counter'),
-      doeSells: this.n('doeSells'),
-      price: this.n('price'),
+      fokItem: this.n('fokItem', true),
+      fokItem2: this.n('fokItem', true),
+      doeItem: this.n('doeItem', true),
+      counter: this.n('counter', true),
+      doeSells: this.n('doeSells', true),
+      price: this.n('price', true),
     };
     v.COUNTER = v.counter;
     v.USER = String(v.user).toUpperCase();

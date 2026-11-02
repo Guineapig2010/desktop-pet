@@ -61,6 +61,7 @@ Closing the chat panel does **not** quit (he keeps living on your desktop).
 | **Your cursor** | Looks at it, gets startled by fast swipes, waves when you hover over him. Every so often he notices it ("!"), sprints, leaps, reaches, misses, stomps in frustration, tries again, and gives up with a tantrum if it's out of reach. When he catches it, his hands clamp around it (or he dangles from it in mid-air), he celebrates, then lets go. |
 | **Albuquerque** | At random times he starts a conversation in a speech bubble with answer buttons. Friendly → salesman → dramatic → impatient → full comic meltdown (red face, steam, stomping) → calms down with deep breaths → **"So, do we have a deal?"** Accept (confetti and a celebration), refuse (heartbroken flop, and he'll be back), bargain (increasingly ridiculous counter-offers) or ignore him (he knocks on the screen and sulks). After a deal he keeps planning the trip with you. Over 200 lines, drawn from shuffle bags so they don't repeat. |
 | **Doe the robot** | Every so often **Doe**, a deadpan little robot on tank treads with a screen for a face, rolls onto the screen. General Fok drops everything to strike a deal with him: trades, counter-offers, Albuquerque timeshares, Doe trying to sell him "a slightly used semicolon". It ends in a handshake and confetti, a tantrum, or a question to **you**: "Is that a fair deal?" Doe talks in ALL CAPS, can be dragged around, and rolls off when done. Frequency slider in Settings, or right-click → *Call Doe the robot over*. When Doe isn't around, Fok still schemes about his next Doe deal. |
+| **Crates & building** | Press **⌥3** (Option + 3) to drop a wooden crate at your cursor. Crates fall, stack and land on window edges. Drag and throw them; **right-click a crate** to make it vanish. Once there are two or more, General Fok carries them over and builds a tower or pyramid, then climbs on top and shows off (or right-click him → *Build with the crates!*). |
 | **Personal Helper** | Share a display or window and ask about it ("What does this error mean?", "Where do I click?"), or switch to **Do it** and he puts on a jetpack, flies over and really clicks, scrolls and types for you. See [Personal Helper](#personal-helper-he-can-see-your-screen-and-click-for-you) below. |
 | **Chat panel** | Floating, draggable, resizable, minimisable to a slim bar. Message history, input box, Send/Stop, close. Shows his Albuquerque lines and your button answers too. You can answer his deal question by typing ("ok deal", "no way", "what if it's just a weekend?"). |
 
@@ -204,7 +205,7 @@ test/e2e/            Playwright + Electron e2e       → npm run test:e2e, npm r
 
 ### Troubleshooting
 
-* **He isn't there:** check the menu-bar icon → *Show him*, or *Bring him back to the middle*.
+* **He isn't there:** click the app's **Dock icon**. That always brings him back if he was hidden, and opens the chat. Or use the menu bar: **Buddy → Show him** / *Bring him back to the middle*. Hiding only lasts until the app restarts.
 * **Too chatty / too chase-y:** lower the sliders in Settings, or set them to 0.
 * **Chat says Offline:** that's expected until you connect a service in Settings → Chat AI.
 * **Helper says it needs permission / screenshots are black:** allow Screen Recording (and Accessibility for clicking) as described above, then quit and reopen the app.

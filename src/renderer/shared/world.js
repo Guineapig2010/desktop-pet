@@ -12,6 +12,7 @@ export class World {
     this.windows = []; // front-to-back, overlay-local coordinates
     this.platforms = [];
     this.windowsEnabled = true;
+    this.cratePlats = [];
     this.rebuild();
   }
 
@@ -51,7 +52,13 @@ export class World {
         });
       });
     }
-    this.platforms = plats;
+    this.platforms = plats.concat(this.cratePlats || []);
+  }
+
+  /** Tops of resting crates (see overlay/crates.js) are platforms too. */
+  setCratePlatforms(list) {
+    this.cratePlats = list;
+    this.rebuild();
   }
 
   get ground() {
@@ -92,6 +99,6 @@ export class World {
   }
 
   ledges() {
-    return this.platforms.filter((p) => p.kind === 'window');
+    return this.platforms.filter((p) => p.kind === 'window' || p.kind === 'crate');
   }
 }

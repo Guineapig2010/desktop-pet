@@ -529,6 +529,197 @@ class Chase extends Action {
   }
 }
 
+// ── Building with crates ───────────────────────────────────────────────────
+// Walk to each crate, lift it overhead, carry it to the building site, toss it into its slot
+// (bottom row first), then hop onto the finished pile and show off.
+function pyramidSlots(n, site, w, groundY, W) {
+  let b = 1;
+  while ((b * (b + 1)) / 2 < n) b++;
+  if (n === 2) b = 1; // two crates: a little tower
+  const slots = [];
+  for (let r = 0; slots.length < n; r++) {
+    const cnt = Math.max(1, b - r);
+    for (let i = 0; i < cnt && slots.length < n; i++) slots.push({ x: site + (i - (cnt - 1) / 2) * w, y: groundY - r * w, r });
+  }
+  // keep the whole pile on screen
+  const minX = Math.min(...slots.map((s) => s.x)) - w / 2, maxX = Math.max(...slots.map((s) => s.x)) + w / 2;
+  const shift = minX < 0 ? -minX : maxX > W ? W - maxX : 0;
+  slots.forEach((s) => (s.x += shift));
+  return slots;
+}
+
+class Build extends Action {
+  start(p) {
+    this.crates = p.crates;
+    const all = this.crates.list.filter((c) => c.state === 'rest' || c.state === 'fall');
+    const use = all.slice(0, 10);
+    const w = Math.max(...use.map((c) => c.w));
+    const W = p.world.width;
+    const site = clamp(p.x + (p.x < W / 2 ? 1 : -1) * p.H * 1.2, w * 2, W - w * 2);
+    const slots = pyramidSlots(use.length, site, w, p.world.height, W);
+    // match crates to slots; crates already sitting in a slot stay put
+    this.jobs = [];
+    const free = [...use];
+    for (const s of slots) {
+      const already = free.find((c) => c.state === 'rest' && Math.abs(c.x - s.x) < 3 && Math.abs(c.y - s.y) < 3);
+      if (already) {
+        free.splice(free.indexOf(already), 1);
+        s.done = true;
+      }
+    }
+    for (const s of slots.filter((x) => !x.done)) {
+      // nearest crate that's on the ground (so he can reach it)
+      free.sort((a, b) => Math.abs(a.x - p.x) - Math.abs(b.x - p.x));
+      const c = free.find((x) => x.y >= p.world.height - 2) || free[0];
+      if (!c) break;
+      free.splice(free.indexOf(c), 1);
+      this.jobs.push({ crateId: c.id, slot: s });
+    }
+    this.slots = slots;
+    this.phase = 'next';
+    this.pt = 0;
+    p.say('buildStart');
+  }
+  setPhase(ph) {
+    this.phase = ph;
+    this.pt = 0;
+  }
+  walkTo(p, x, dt, speed) {
+    const dx = x - p.x;
+    if (Math.abs(dx) < 4) {
+      p.vx = 0;
+      return true;
+    }
+    p.facing = sign(dx);
+    p.vx = p.facing * Math.min(speed, Math.abs(dx) / dt);
+    return false;
+  }
+  update(p, dt) {
+    this.pt += dt;
+    if (this.t > 90) return this.finish(p);
+    if (p.mode === 'air') return false;
+    if (p.mode !== 'ground') return true;
+    if (p.platform && p.platform.kind !== 'ground' && this.phase !== 'admire') {
+      // get down to the ground first
+      p.launchTo(clamp(p.x + p.facing * p.H * 0.6, p.H * 0.3, p.world.width - p.H * 0.3), p.world.height, p.H * 0.3);
+      return false;
+    }
+    const job = this.jobs[0];
+    const crate = job && this.crates.get(job.crateId);
+    switch (this.phase) {
+      case 'next':
+        if (!job) return this.finish(p);
+        if (!crate || crate.state === 'held') {
+          this.jobs.shift();
+          return false;
+        }
+        this.setPhase('fetch');
+        return false;
+      case 'fetch':
+        if (!crate) return this.setPhase('next'), false;
+        if (crate.state === 'fall' || crate.state === 'toss') {
+          p.vx = 0;
+          return false;
+        }
+        if (this.walkTo(p, crate.x - p.facing * 0, dt, p.walkSpeed * 1.6)) {
+          if (crate.y < p.world.height - 2) {
+            // it's up on something he can't reach: skip it
+            this.jobs.shift();
+            this.setPhase('next');
+            return false;
+          }
+          this.setPhase('lift');
+          p.sound('grab');
+        }
+        return false;
+      case 'lift':
+        p.vx = 0;
+        if (!crate) return this.setPhase('next'), false;
+        if (this.pt > 0.2 && crate.state !== 'carried') {
+          crate.state = 'carried';
+          crate.carriedBy = p;
+          p.carrying = crate;
+          this.crates.changed = true;
+        }
+        if (this.pt > 0.4) this.setPhase('carry');
+        return false;
+      case 'carry': {
+        if (!crate || p.carrying !== crate) {
+          p.carrying = null;
+          this.jobs.shift();
+          return this.setPhase('next'), false;
+        }
+        // stand beside the slot (the near side), then toss it in
+        const s = job.slot;
+        const side = p.x <= s.x ? -1 : 1;
+        const standX = clamp(s.x + side * (crate.w * 0.5 + p.H * 0.22) + side * s.r * crate.w * 0.5, p.H * 0.3, p.world.width - p.H * 0.3);
+        if (this.walkTo(p, standX, dt, p.walkSpeed * 1.3)) {
+          p.facing = sign(s.x - p.x) || p.facing;
+          // only toss once the slot below is supported
+          const below = s.r === 0 || this.crates.list.some((c) => c.state === 'rest' && Math.abs(c.x - s.x) < crate.w * 0.7 && Math.abs(c.y - crate.w - s.y) < 3);
+          if (!below && this.pt < 6) return false;
+          crate.state = 'toss';
+          crate.carriedBy = null;
+          crate.fx = crate.x;
+          crate.fy = crate.y;
+          crate.tx = s.x;
+          crate.ty = s.y;
+          crate.tt = 0;
+          crate.tdur = 0.35 + s.r * 0.08;
+          p.carrying = null;
+          p.sound('jump');
+          this.jobs.shift();
+          this.setPhase('toss');
+        }
+        return false;
+      }
+      case 'toss':
+        p.vx = 0;
+        if (this.pt > 0.55) this.setPhase('next');
+        return false;
+      case 'admire':
+        p.vx = 0;
+        return this.pt > 2.4;
+    }
+    return false;
+  }
+  finish(p) {
+    p.carrying = null;
+    if (this.phase === 'admire') return true;
+    // hop onto the top of the pile and celebrate
+    const tops = p.world.platforms.filter((x) => x.kind === 'crate');
+    if (tops.length && !this.climbed) {
+      this.climbed = true;
+      const top = tops.reduce((a, b) => (b.y < a.y ? b : a));
+      p.queueFront(new Emote({ name: 'celebrate', dur: 2.2, sayKey: 'buildDone', hop: false }));
+      if (p.y - top.y < p.H * 3) p.queueFront(new Jump({ x: (top.x1 + top.x2) / 2, y: top.y, arc: p.H * 0.4 }));
+      return true;
+    }
+    return true;
+  }
+  end(p) {
+    if (p.carrying) {
+      p.carrying.state = 'fall';
+      p.carrying.carriedBy = null;
+      p.carrying = null;
+    }
+  }
+  anim(p) {
+    switch (this.phase) {
+      case 'lift':
+        return { name: 'lift' };
+      case 'carry':
+        return p.vx ? { name: 'carry', ctx: { phase: p.stepPhase } } : { name: 'carry', ctx: { phase: 0 } };
+      case 'toss':
+        return { name: 'toss' };
+      case 'fetch':
+        return p.vx ? { name: 'walk', ctx: { phase: p.stepPhase } } : { name: 'idle' };
+      default:
+        return { name: 'idle' };
+    }
+  }
+}
+
 // ── Helper mode: jetpack flight to a target on screen ──────────────────────
 // Phases: equip → fly (to a hover point BESIDE the target) → hover (main verifies the target)
 // → reach (hand moves onto the target; main clicks at the moment of touch) → press → hold
@@ -741,6 +932,22 @@ export class Pet {
   }
   get busy() {
     return this.action && !(this.action instanceof Idle) && !(this.action instanceof Sit) && !(this.action instanceof Walk);
+  }
+
+  dropCarried() {
+    if (this.carrying) {
+      this.carrying.carriedBy = null;
+      this.carrying = null;
+    }
+  }
+
+  startBuild() {
+    if (!this.crates || this.crates.list.filter((c) => c.state === 'rest').length < 2) return false;
+    if (this.mode !== 'ground' || this.conversing || this.helperActive) return false;
+    if (this.action && !this.action.interruptible) return false;
+    if (this.action instanceof Build) return true;
+    this.interrupt(new Build());
+    return true;
   }
 
   setCharacter(ch) {
@@ -1084,6 +1291,8 @@ export class Pet {
     }
     const dialogue = clamp(this.settings.dialogueFrequency ?? 0.5, 0, 1);
     if (dialogue > 0 && this.cool('ambient', lerp(240, 40, dialogue))) add(0.5 * dialogue, () => this.host.event?.('ambient'));
+    const restingCrates = this.crates ? this.crates.list.filter((c) => c.state === 'rest').length : 0;
+    if (restingCrates >= 2 && this.cool('build', 25)) add(3.5, () => this.queue.push(new Build()));
 
     let total = opts.reduce((s, o) => s + o[0], 0);
     let r = Math.random() * total;
@@ -1245,6 +1454,16 @@ export class Pet {
     if (this.landT > 0) this.landT -= dt;
 
     this.updateAnimation(dt);
+    if (this.carrying) {
+      const c = this.carrying;
+      if (c.state !== 'carried' || !this.crates?.get(c.id)) this.carrying = null;
+      else {
+        const h = this.handsWorld();
+        c.x = h[0];
+        c.y = h[1] + c.w * 0.05;
+        c.rot = 0;
+      }
+    }
   }
 
   // ── animation ────────────────────────────────────────────────────────────
@@ -1405,4 +1624,4 @@ function floorSit(p) {
   p.leg.F = [1.42, -0.05];
 }
 
-export const _test = { Idle, Walk, Jump, Climb, Chase, Held, Emote, Converse, Sit, Sleep, Fall, Fly, GRAVITY };
+export const _test = { Idle, Walk, Jump, Climb, Chase, Held, Emote, Converse, Sit, Sleep, Fall, Fly, Build, GRAVITY };

@@ -273,13 +273,16 @@ api.helperState().then(renderHelper);
 api.helperTakeOpenPicker().then((p) => p && openPicker());
 
 api.onAiStatus(refreshStatus);
+$('showPet').addEventListener('click', () => api.setSettings({ hidden: false }));
 api.onSettings((s) => {
+  $('hiddenBanner').classList.toggle('hidden', !s.hidden);
   $('name').textContent = s.petName || 'General Fok';
   refreshStatus();
 });
 
 (async () => {
   const s = await api.getSettings();
+  $('hiddenBanner').classList.toggle('hidden', !s.hidden);
   $('name').textContent = s.petName || 'General Fok';
   const hist = await api.chatHistory();
   hist.slice(-120).forEach(add);

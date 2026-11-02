@@ -107,3 +107,16 @@ test('typed chat replies map onto the offered answers', () => {
   assert.equal(classifyReply('sure, sounds fun', ['yes', 'no', 'maybe']), 'yes');
   assert.equal(classifyReply('what is the capital of France?', ['yes', 'no', 'maybe']), null);
 });
+
+test('Doe deal scenes: Doe always talks in caps, no unfilled {placeholders}', async () => {
+  const { DealScenes } = await import('../../src/renderer/shared/dealScenes.js');
+  const d = new DealScenes();
+  const walk = (steps) => {
+    for (const s of steps) {
+      if (s.text) assert.ok(!/\{\w+\}/.test(s.text), `unfilled: ${s.text}`);
+      if (s.who === 'doe') assert.equal(s.text, s.text.toUpperCase(), s.text);
+      if (s.ask) for (const b of Object.values(s.ask.branches)) walk(b);
+    }
+  };
+  for (let i = 0; i < 2000; i++) walk(d.scene({ user: 'Sam' }).steps);
+});

@@ -104,3 +104,7 @@ body.collapsed .helperbar { display: none; }
 .src .k { color: var(--accent); font-size: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
 .perm { background: #3b2224; color: #ffd6d0; padding: 8px 10px; border-radius: 10px; font-size: 12px; margin-bottom: 8px; }
 .perm a { color: #ffd27a; }
+
+.hidden-banner { font-size: 12px; padding: 7px 12px; background: #23303a; color: #cfe3f2; border-bottom: 1px solid #34465a; display: flex; align-items: center; gap: 8px; }
+.hidden-banner button { border: none; border-radius: 8px; padding: 4px 10px; background: var(--me); color: #fff; font: inherit; font-weight: 700; cursor: pointer; }
+body.collapsed .hidden-banner { display: none; }

@@ -367,6 +367,74 @@ try {
     await waitFor(async () => !(await state()).doe, { what: 'doe leaves', timeout: 20000 });
   });
 
+  await step('crates: ⌥3 spawns a crate at the cursor; crates fall and stack', async () => {
+    await B(() => window.__buddy.pet.interrupt(new window.__buddy.actions.Idle({ dur: 60 })));
+    const st0 = await state();
+    const x = st0.x < b.width / 2 ? st0.x + 420 : st0.x - 420;
+    await setCursor(b.x + x, b.y + 200);
+    await T(() => globalThis.__buddyTest.spawnCrateAtCursor());
+    await waitFor(async () => (await state()).crates?.[0]?.state === 'rest', { what: 'first crate lands' });
+    const c1 = (await state()).crates[0];
+    assert.equal(c1.y, b.height, 'lands on the bottom of the screen');
+    assert.ok(Math.abs(c1.x - x) < 2, 'right under the cursor');
+    await setCursor(b.x + x + 10, b.y + 100);
+    await T(() => globalThis.__buddyTest.spawnCrateAtCursor());
+    await waitFor(async () => (await state()).crates?.length === 2 && (await state()).crates.every((c) => c.state === 'rest'), { what: 'second crate lands' });
+    const w = await B(() => window.__buddy.crates.list[0].w);
+    const c2 = (await state()).crates[1];
+    assert.equal(c2.y, b.height - w, 'stacked on top of the first crate');
+    await setCursor(b.x + x - 160, b.y + 300);
+    await T(() => globalThis.__buddyTest.spawnCrateAtCursor());
+    await waitFor(async () => (await state()).crates?.length === 3 && (await state()).crates.every((c) => c.state === 'rest'), { what: 'third crate lands' });
+    await overlay.screenshot({ path: path.join(shots, 'overlay-crates.png') });
+  });
+
+  await step('he builds a pyramid with the crates, then stands on top and celebrates', async () => {
+    await T(() => globalThis.__buddyTest.command('build'));
+    const anims = new Set();
+    await waitFor(
+      async () => {
+        const st = await state();
+        anims.add(st.anim);
+        return st.action === 'Build' || null;
+      },
+      { what: 'build start', timeout: 10000, interval: 100 },
+    );
+    await waitFor(
+      async () => {
+        const st = await state();
+        anims.add(st.anim);
+        if (st.anim === 'carry' && !anims.shot) {
+          anims.shot = true;
+          await overlay.screenshot({ path: path.join(shots, 'overlay-carry.png') });
+        }
+        return st.action !== 'Build' && st.action !== 'Jump' ? st : null;
+      },
+      { what: 'build finished', timeout: 90000, interval: 100 },
+    );
+    assert.ok(anims.has('carry') && anims.has('lift'), `carried crates: ${[...anims]}`);
+    const cr = (await state()).crates;
+    const w = await B(() => window.__buddy.crates.list[0].w);
+    const rows = cr.map((c) => Math.round((b.height - c.y) / w)).sort();
+    assert.deepEqual(rows, [0, 0, 1], `pyramid rows ${JSON.stringify(cr)}`);
+    await waitFor(async () => String((await state()).platform).startsWith('c'), { what: 'standing on the pile', timeout: 8000 });
+    await overlay.screenshot({ path: path.join(shots, 'overlay-built.png') });
+  });
+
+  await step('right-clicking a crate removes it (and whatever stood on it falls)', async () => {
+    await setCursor(b.x + 5, b.y + 5);
+    const top = (await state()).crates.reduce((a, c) => (c.y < a.y ? c : a));
+    const bottom = (await state()).crates.find((c) => c.y === b.height && Math.abs(c.x - top.x) < 200);
+    const w = await B(() => window.__buddy.crates.list[0].w);
+    await overlay.mouse.click(bottom.x, bottom.y - w / 2, { button: 'right' });
+    await waitFor(async () => (await state()).crates.length === 2, { what: 'crate removed' });
+    // the top crate lost half its support but still overlaps the other bottom crate, or it falls to the ground
+    await waitFor(async () => (await state()).crates.every((c) => c.state === 'rest'), { what: 'settled' });
+    await T(() => globalThis.__buddyTest.command('clearCrates'));
+    await waitFor(async () => (await state()).crates.length === 0, { what: 'all crates removed' });
+    await waitFor(async () => (await state()).platform === 'ground', { what: 'he is back on the ground', timeout: 8000 });
+  });
+
   let chat;
   await step('chat panel opens; offline mode is clearly labelled and still answers', async () => {
     await T(() => globalThis.__buddyTest.openChat());
@@ -444,8 +512,16 @@ try {
     await chat.click('#collapseBtn');
     await sleep(500);
     assert.equal(await chat.evaluate(() => window.innerHeight > 300), true);
-    await chat.click('#closeBtn');
+    await chat.evaluate(() => setTimeout(() => document.getElementById('closeBtn').click(), 50)).catch(() => {});
     await waitFor(async () => !app.windows().some((w) => w.url().includes('/chat/')), { what: 'chat closed' });
+  });
+
+  await step('hide him, then clicking the app (Dock) brings him back', async () => {
+    await T(() => globalThis.__buddyTest.applySettings({ hidden: true }));
+    await waitFor(async () => !(await T(({ BrowserWindow }) => BrowserWindow.getAllWindows().find((w) => w.webContents.getURL().includes('/overlay/'))?.isVisible())), { what: 'hidden' });
+    await T(({ app }) => app.emit('activate'));
+    await waitFor(async () => await T(({ BrowserWindow }) => BrowserWindow.getAllWindows().find((w) => w.webContents.getURL().includes('/overlay/'))?.isVisible()), { what: 'shown again' });
+    assert.equal(await T(() => globalThis.__buddyTest.applySettings({}).hidden), false);
   });
 
   await step('settings window opens and pausing stops behaviour', async () => {

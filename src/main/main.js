@@ -1,5 +1,5 @@
 // Albuquerque Buddy — Electron main process.
-import { app, BrowserWindow, ipcMain, screen, Menu, Tray, nativeImage, dialog, protocol, net, shell } from 'electron';
+import { app, BrowserWindow, ipcMain, screen, Menu, Tray, nativeImage, dialog, protocol, net, shell, globalShortcut } from 'electron';
 import path from 'node:path';
 import fs from 'node:fs';
 import os from 'node:os';
@@ -196,6 +196,12 @@ function openSharePicker() {
   }
 }
 
+function spawnCrateAtCursor() {
+  const p = fakeCursor || screen.getCursorScreenPoint();
+  const o = overlayOrigin();
+  command('spawnCrate', { x: p.x - o.x, y: p.y - o.y });
+}
+
 function openSettings() {
   if (settingsWin && !settingsWin.isDestroyed()) {
     settingsWin.show();
@@ -262,6 +268,9 @@ function petMenuTemplate() {
     { label: 'Talk about Albuquerque', click: () => command('talk') },
     { label: 'Chase my cursor!', click: () => command('chase') },
     { label: 'Call Doe the robot over', click: () => command('doe') },
+    { label: 'Spawn a crate', accelerator: 'Alt+3', registerAccelerator: false, click: () => spawnCrateAtCursor() },
+    { label: 'Build with the crates!', click: () => command('build') },
+    { label: 'Remove all crates', click: () => command('clearCrates') },
     { label: 'Personal Helper: share my screen…', click: () => openSharePicker() },
     ...(helper?.source ? [{ label: 'Stop screen sharing', click: () => helper.stopSharing() }] : []),
     { type: 'separator' },
@@ -632,6 +641,7 @@ function installTestHooks() {
     restraint: () => restraint,
     helper: () => helper,
     pressKey: (k) => realInput.key(k),
+    spawnCrateAtCursor,
     latestWindows: () => latestWindows,
   };
   // record the ignore-mouse state for assertions
@@ -646,6 +656,7 @@ function installTestHooks() {
 app.whenReady().then(() => {
   const ud = app.getPath('userData');
   settings = new JsonStore(path.join(ud, 'settings.json'), DEFAULT_SETTINGS);
+  if (settings.get().hidden) settings.set({ hidden: false }); // hiding only lasts until the app restarts
   storyStore = new JsonStore(path.join(ud, 'story.json'), {});
   chatStore = new JsonStore(path.join(ud, 'chat-history.json'), { messages: [] });
   secrets = new Secrets(ud);
@@ -708,6 +719,12 @@ app.whenReady().then(() => {
   createOverlay();
   createTray();
   startCursorPolling();
+  // ⌥3 drops a crate at the cursor (Option+3 rather than plain 3, so typing "3" keeps working everywhere)
+  try {
+    globalShortcut.register('Alt+3', spawnCrateAtCursor);
+  } catch (e) {
+    log('could not register Alt+3', e.message);
+  }
   if (settings.get().useWindows && !TEST) tracker.start();
   else if (!settings.get().useWindows) tracker.setStatus({ available: false, reason: 'Turned off in Settings.' });
 
@@ -722,11 +739,23 @@ app.whenReady().then(() => {
   log('ready');
 });
 
-app.on('second-instance', () => openChat());
-app.on('activate', () => openChat()); // clicking the Dock icon opens the chat
+function showPetIfHidden() {
+  if (settings?.get().hidden) applySettings({ hidden: false });
+  else if (overlay && !overlay.isVisible()) overlay.showInactive();
+}
+app.on('second-instance', () => {
+  showPetIfHidden();
+  openChat();
+});
+// clicking the Dock icon brings him back (if hidden) and opens the chat
+app.on('activate', () => {
+  showPetIfHidden();
+  openChat();
+});
 app.on('window-all-closed', () => {
   /* keep running: the pet lives in the overlay + tray */
 });
+app.on('will-quit', () => globalShortcut.unregisterAll());
 app.on('before-quit', () => {
   quitting = true;
   clearInterval(cursorTimer);

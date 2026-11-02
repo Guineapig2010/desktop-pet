@@ -323,6 +323,37 @@ export const ANIMS = {
     if (c.target && c.skel) aimArm(p, c.skel, 'N', [c.target[0], c.target[1] + 2.5 * Math.sin(t * 16)]);
     else p.arm.N = [1.5, 0.2 + 0.25 * Math.sin(t * 16)];
   },
+  // ── crates ──
+  lift(p, t) {
+    const k = clamp(t / 0.35, 0, 1);
+    p.leg.N = [0.55 * (1 - k), -1.0 * (1 - k)];
+    p.leg.F = [0.45 * (1 - k), -0.9 * (1 - k)];
+    p.lean = 0.25 * (1 - k);
+    p.arm.N = [1.0 + 2.0 * k, 0.6 - 0.4 * k];
+    p.arm.F = [0.9 + 2.0 * k, 0.6 - 0.4 * k];
+    p.hand.N = p.hand.F = 'open';
+    p.mouthShape = 'grit';
+    p.sy = 1 - 0.06 * (1 - k);
+  },
+  carry(p, t, c) {
+    const ph = c.phase ?? t * 6;
+    p.leg.N = [0.35 * S(ph), -(0.12 + 0.6 * pos(C(ph)))];
+    p.leg.F = [0.35 * S(ph + Math.PI), -(0.12 + 0.6 * pos(C(ph + Math.PI)))];
+    p.arm.N = [2.95, 0.25 + 0.05 * S(ph * 2)];
+    p.arm.F = [2.85, 0.25 + 0.05 * S(ph * 2 + 1)];
+    p.hand.N = p.hand.F = 'open';
+    p.mouthShape = 'grit';
+    p.headTilt = 0.04 * S(ph * 2);
+  },
+  toss(p, t) {
+    const k = clamp(t / 0.3, 0, 1);
+    p.arm.N = [2.95 - 1.2 * k, 0.25];
+    p.arm.F = [2.85 - 1.2 * k, 0.25];
+    p.hand.N = p.hand.F = 'open';
+    p.lean = 0.1 * k;
+    p.mouthShape = 'grin';
+    p.mouth = 0.5;
+  },
   // ── jetpack / helper poses ──
   fly(p, t, c) {
     p.grounded = false;

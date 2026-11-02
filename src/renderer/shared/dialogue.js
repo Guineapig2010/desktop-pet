@@ -218,6 +218,10 @@ export const LINES = {
   restraintEscape: ["Ah! Okay, okay, letting go!", "Fine! Escape key. Very sneaky."],
   sleepy: ["*yawn*", "Just gonna rest my eyes...", "Zzz..."],
   bored: ["*whistles*", "I'm boooored.", "Anyone wanna talk about Albuquerque?"],
+  crateSpawn: ['Ooh! Building materials!', 'A crate! I love crates!', 'More crates! Keep \'em coming!', 'Is that for me? It\'s for me.', 'Crate delivery for General Fok!'],
+  buildStart: ['Stand back! General Fok is BUILDING!', 'Time for some construction!', "I'm gonna build Albuquerque right here!", 'Hard hats on, everybody!', 'Watch and learn, {user}.'],
+  buildDone: ['Behold! The Fok Tower!', 'Architecture! Genius!', 'I call it... Albuquerque Heights.', 'Ta-da! Nailed it. No nails were used.', 'King of the crates!'],
+  crateRemoved: ['Hey! I was using that!', 'My crate!', 'Poof! Where\'d it go?', 'Rude!', 'That was load-bearing!'],
   roach: ["A cockroach! Get back here!", "Not on MY desktop!", "Ew ew ew!"],
 };
 
