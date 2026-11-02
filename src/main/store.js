@@ -57,7 +57,7 @@ export const DEFAULT_SETTINGS = {
   size: 1,
   headScale: 1.2,
   speed: 1,
-  chaseFrequency: 0.5,
+  chaseFrequency: 0.6,
   dialogueFrequency: 0.5,
   doeFrequency: 0.5,
   sound: true,

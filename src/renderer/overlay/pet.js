@@ -707,7 +707,7 @@ export class Pet {
     this.cursor = { x: -9999, y: -9999, vx: 0, vy: 0, t: 0 };
     this.idleCursorTime = 0;
     this.hoverTime = 0;
-    this.chaseCooldown = rand(20, 45);
+    this.chaseCooldown = rand(12, 20);
     this.cooldowns = {};
     this.drag = { active: false, x: 0, y: 0, ox: 0, oy: 0, pivot: [0, -78] };
     this.swing = 0;
@@ -923,7 +923,7 @@ export class Pet {
 
   onChaseEnded(chase) {
     const f = clamp(this.settings.chaseFrequency ?? 0.5, 0, 1);
-    this.chaseCooldown = lerp(240, 30, f) * rand(0.8, 1.3) + (chase.gaveUp ? 15 : 0);
+    this.chaseCooldown = lerp(150, 15, f) * rand(0.8, 1.2) + (chase.gaveUp ? 10 : 0);
     this.host.event?.('chaseEnded', { caught: !chase.gaveUp });
   }
 
@@ -1144,7 +1144,7 @@ export class Pet {
     if (this.chaseCooldown > 0 || this.mode !== 'ground') return;
     if (this.action && !(this.action instanceof Idle || this.action instanceof Walk || this.action instanceof Sit)) return;
     if (this.idleCursorTime > 30) return; // only when you're actually around
-    const pSec = 0.01 + 0.06 * f * f;
+    const pSec = 0.03 + 0.2 * f * f;
     if (Math.random() < pSec * dt) this.startChase();
   }
 
