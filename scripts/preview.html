@@ -1,0 +1,35 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>body{margin:0;background:#7fa7c9}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas>
+<script type="module">
+import { VectorCharacter } from '../src/renderer/shared/charVector.js';
+import { fk } from '../src/renderer/shared/rig.js';
+import { animate } from '../src/renderer/shared/animations.js';
+const params = new URLSearchParams(location.search);
+const names = (params.get('anims') || 'idle,walk,run,jumpPrep,rise,fall,land,angry,talk,grab,celebrate,climb,sit,sleep,held,hang').split(',');
+const t = parseFloat(params.get('t') || '0.4');
+const H = parseFloat(params.get('h') || '200');
+const cols = Math.min(names.length, parseInt(params.get('cols') || '8'));
+const cw = H * 0.95, ch = H * 1.35;
+const c = document.getElementById('c');
+const dpr = 1;
+c.width = cols * cw; c.height = Math.ceil(names.length / cols) * ch;
+const ctx = c.getContext('2d');
+if (params.get('bg') === 'none') document.body.style.background = 'transparent';
+const ch_ = new VectorCharacter();
+names.forEach((n, i) => {
+  const x = (i % cols) * cw + cw / 2, y = Math.floor(i / cols) * ch + ch - 20;
+  const pose = animate(n, t, { phase: t * 8, skel: ch_.skel, target: [30, -70], time: t });
+  const J = fk(pose, ch_.skel);
+  ctx.save();
+  ctx.translate(x, y - (pose.grounded ? 0 : 10));
+  const k = H / 100;
+  ctx.scale(k, k);
+  ctx.translate(pose.pivot[0], pose.pivot[1]); ctx.rotate(pose.rot); ctx.translate(-pose.pivot[0], -pose.pivot[1]);
+  ctx.scale(pose.sx, pose.sy);
+  ch_.draw(ctx, pose, J);
+  ctx.restore();
+  if (params.get('labels') !== '0') { ctx.fillStyle = '#000'; ctx.font = '13px sans-serif'; ctx.fillText(n, x - cw / 2 + 6, y - ch + 40); }
+});
+document.title = 'done';
+</script></body></html>
