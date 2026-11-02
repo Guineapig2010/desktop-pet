@@ -9,8 +9,9 @@
     "start": "electron .",
     "test": "node --test test/unit/*.test.mjs",
     "test:e2e": "node test/e2e/run-e2e.mjs",
-    "package:mac": "electron-packager . \"Albuquerque Buddy\" --platform=darwin --overwrite --out=dist --icon=assets/icon.icns --ignore=\"^/(dist|test|docs)\"",
-    "test:helper": "node test/e2e/helper-e2e.mjs"
+    "package:mac": "electron-packager . \"Albuquerque Buddy\" --platform=darwin --overwrite --out=dist --icon=assets/icon.icns --asar.unpackDir=src/main/helpers --ignore=\"^/(dist|test|docs)\" --ignore=\"node_modules/@nut-tree-fork/libnut-(linux|win32)\" --app-bundle-id=com.albuquerquebuddy.app --extend-info=assets/Info.extra.plist",
+    "test:helper": "node test/e2e/helper-e2e.mjs",
+    "install-app": "node scripts/install-mac.mjs"
   },
   "license": "MIT",
   "dependencies": {

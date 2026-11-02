@@ -30,13 +30,15 @@ npm install
 npm start
 ```
 
-### Optional: make a real app you can keep in Applications
+### Make it a real app (recommended)
+
+`npm start` runs him from Terminal. To get a normal Mac app you open from Launchpad, Spotlight or the Dock, run this once in the project folder:
 
 ```bash
-npm run package:mac
+npm run install-app
 ```
 
-This creates `dist/Albuquerque Buddy-darwin-arm64/Albuquerque Buddy.app` (or `-x64` on Intel Macs). Drag it into **Applications**. It's built on your own Mac, so it's not quarantined. It isn't code-signed, so if macOS complains, right-click → Open the first time.
+It builds **Albuquerque Buddy.app** on your Mac, copies it into **Applications** and opens it. From then on, just open **Albuquerque Buddy** like any other app. To keep him in the Dock, right-click his Dock icon → *Options* → *Keep in Dock*. Because it's built on your Mac it isn't quarantined. It isn't code-signed, so if macOS ever complains, right-click the app → **Open** once. Run the same command again after downloading a newer version. Permissions (Screen Recording / Accessibility) are then granted to **Albuquerque Buddy** itself instead of Terminal/Electron.
 
 ### Quitting
 

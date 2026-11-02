@@ -17,7 +17,8 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '../..');
 const RENDERER = path.join(ROOT, 'src/renderer');
 const PRELOAD = path.join(ROOT, 'src/preload/preload.cjs');
-const HELPERS = path.join(here, 'helpers');
+// osascript can't read inside app.asar, so the packaged app ships the helpers unpacked
+const HELPERS = path.join(here, 'helpers').replace(`app.asar${path.sep}`, `app.asar.unpacked${path.sep}`);
 const ASSETS = path.join(ROOT, 'assets');
 const TEST = process.env.BUDDY_TEST === '1';
 const isMac = process.platform === 'darwin';
