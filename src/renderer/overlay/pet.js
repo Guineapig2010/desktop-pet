@@ -145,6 +145,8 @@ class Climb extends Action {
           p.landT = 0.2;
           p.landImpact = 0.5;
           p.sound('land');
+          // made it! enjoy the view for a moment
+          p.queueFront(new Idle({ dur: rand(2.5, 4.5), variant: 'lookAround' }));
         } else {
           p.fallOff();
         }
@@ -1143,4 +1145,4 @@ function floorSit(p) {
   p.leg.F = [1.42, -0.05];
 }
 
-export const _test = { Idle, Walk, Jump, Climb, Chase, Held, Emote, Converse, Sit, Sleep, GRAVITY };
+export const _test = { Idle, Walk, Jump, Climb, Chase, Held, Emote, Converse, Sit, Sleep, Fall, GRAVITY };

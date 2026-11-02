@@ -1,0 +1,46 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><style>html,body{margin:0;background:transparent}canvas{display:block}</style></head>
+<body><canvas id="c"></canvas>
+<script type="module">
+import { VectorCharacter } from '../src/renderer/shared/charVector.js';
+import { fk } from '../src/renderer/shared/rig.js';
+import { animate } from '../src/renderer/shared/animations.js';
+const q = new URLSearchParams(location.search);
+const mode = q.get('mode') || 'icon';
+const S = parseInt(q.get('size') || '512');
+const c = document.getElementById('c');
+c.width = c.height = S;
+const g = c.getContext('2d');
+const ch = new VectorCharacter();
+const pose = animate('idle', 0.3, { skel: ch.skel });
+pose.look = [0.3, 0.1];
+const J = fk(pose, ch.skel);
+if (mode === 'icon') {
+  // macOS-style rounded square with an Albuquerque sunset
+  const r = S * 0.22, m = S * 0.06;
+  g.beginPath(); g.roundRect(m, m, S - 2 * m, S - 2 * m, r); g.save(); g.clip();
+  const sky = g.createLinearGradient(0, m, 0, S - m);
+  sky.addColorStop(0, '#2b6cb0'); sky.addColorStop(0.5, '#f29f5c'); sky.addColorStop(0.75, '#f27a7a'); sky.addColorStop(1, '#7a4b8a');
+  g.fillStyle = sky; g.fillRect(0, 0, S, S);
+  // pink mountains
+  g.fillStyle = '#b4547a';
+  g.beginPath(); g.moveTo(0, S * 0.78); g.lineTo(S * 0.2, S * 0.62); g.lineTo(S * 0.35, S * 0.7); g.lineTo(S * 0.55, S * 0.55); g.lineTo(S * 0.8, S * 0.68); g.lineTo(S, S * 0.6); g.lineTo(S, S); g.lineTo(0, S); g.fill();
+  // balloon
+  g.fillStyle = '#ffd34d'; g.beginPath(); g.ellipse(S * 0.8, S * 0.25, S * 0.07, S * 0.085, 0, 0, Math.PI * 2); g.fill();
+  g.fillStyle = '#e0574a'; g.fillRect(S * 0.785, S * 0.34, S * 0.03, S * 0.025);
+  g.restore();
+}
+// head + shoulders, big
+const k = mode === 'icon' ? S / 62 : S / 40;
+g.save();
+g.translate(S / 2 - J.head[0] * k, (mode === 'icon' ? S * 0.47 : S * 0.52) - J.head[1] * k);
+g.scale(k, k);
+ch.draw(g, pose, J);
+g.restore();
+if (mode === 'icon') {
+  // keep the bottom inside the rounded square
+  g.globalCompositeOperation = 'destination-in';
+  const m = S * 0.06; g.beginPath(); g.roundRect(m, m, S - 2 * m, S - 2 * m, S * 0.22); g.fill();
+}
+document.title = 'done';
+</script></body></html>

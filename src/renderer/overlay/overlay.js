@@ -7,7 +7,7 @@ import { loadPhotoCharacter } from '../shared/charPhoto.js';
 import { Story, classifyReply } from '../shared/story.js';
 import { LINES } from '../shared/dialogue.js';
 import { LinePicker, clamp, lerp, rand, fill } from '../shared/util.js';
-import { Pet } from './pet.js';
+import { Pet, _test as actions } from './pet.js';
 import { Effects } from './effects.js';
 import { Bubble } from './bubble.js';
 import { Sound } from './sound.js';
@@ -421,5 +421,5 @@ setInterval(() => {
 }, 500);
 
 // test / debug handle
-window.__buddy = { pet, world, story, bubble, conv, runConversation, fx, settings, get character() { return character; } };
+window.__buddy = { pet, world, story, bubble, conv, runConversation, fx, settings, actions, get character() { return character; } };
 api.log(`overlay ready ${world.width}x${world.height} @${dpr}x, character=${character.kind}`);
