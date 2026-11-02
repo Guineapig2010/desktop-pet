@@ -39,7 +39,7 @@ for (const [k, fmt] of Object.entries(sliders)) {
   });
 }
 for (const k of checks) $(k).addEventListener('change', () => save({ [k]: $(k).checked }));
-for (const k of ['petName', 'userName']) $(k).addEventListener('change', () => save({ [k]: $(k).value.trim() || (k === 'petName' ? 'Buddy' : 'pal') }));
+for (const k of ['petName', 'userName']) $(k).addEventListener('change', () => save({ [k]: $(k).value.trim() || (k === 'petName' ? 'General Fok' : 'pal') }));
 $('character').addEventListener('change', () => save({ character: $('character').value }));
 $('provider').addEventListener('change', () => {
   save({ ai: { provider: $('provider').value } }).then(fill);

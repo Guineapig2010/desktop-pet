@@ -1,0 +1,79 @@
+<!doctype html>
+<html><head><meta charset="utf-8"></head><body>
+<canvas id="pv"></canvas>
+<script type="module">
+import { autoJoints, labelPixels, cutParts, sampleSkin, buildRig, alphaBounds } from '../src/renderer/shared/segment.js';
+import { PhotoCharacter } from '../src/renderer/shared/charPhoto.js';
+import { animate } from '../src/renderer/shared/animations.js';
+import { fk } from '../src/renderer/shared/rig.js';
+
+const canvasOf = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return c; };
+
+// Called by scripts/build-character.mjs
+window.build = async (cutoutUrl, jointsOverride, opts = {}) => {
+  const img = new Image(); img.src = cutoutUrl; await img.decode();
+  // crop to subject + pad, cap height
+  let c = canvasOf(img.naturalWidth, img.naturalHeight);
+  c.getContext('2d').drawImage(img, 0, 0);
+  const a0 = c.getContext('2d').getImageData(0, 0, c.width, c.height).data;
+  const al = new Uint8Array(c.width * c.height); for (let i = 0; i < al.length; i++) al[i] = a0[i * 4 + 3];
+  const b = alphaBounds(al, c.width, c.height, 40);
+  const pad = 10, maxH = opts.maxH || 900;
+  const s = Math.min(1, maxH / (b.y2 - b.y1 + 2 * pad));
+  const w = Math.round((b.x2 - b.x1 + 2 * pad) * s), h = Math.round((b.y2 - b.y1 + 2 * pad) * s);
+  const cut = canvasOf(w, h);
+  cut.getContext('2d').drawImage(c, b.x1 - pad, b.y1 - pad, b.x2 - b.x1 + 2 * pad, b.y2 - b.y1 + 2 * pad, 0, 0, w, h);
+  const id = cut.getContext('2d').getImageData(0, 0, w, h);
+  const alpha = new Uint8Array(w * h); for (let i = 0; i < alpha.length; i++) alpha[i] = id.data[i * 4 + 3];
+  let J = autoJoints(alpha, w, h);
+  if (jointsOverride) {
+    // overrides are given as fractions of the cropped image (0..1) so they survive re-scaling
+    for (const [k, v] of Object.entries(jointsOverride)) J[k] = k === 'mouthY' ? v * h : [v[0] * w, v[1] * h];
+  }
+  const labels = labelPixels(alpha, w, h, J, opts);
+  const parts = cutParts(id, labels, canvasOf, 3);
+  const rig = buildRig(J, parts, sampleSkin(id, J));
+  rig.handVisible = opts.handVisible || { N: true, F: true };
+  rig.headScale = opts.headScale || 1.2;
+  rig.stamp = Date.now();
+  window.__last = { rig, parts, cut, labels, w, h };
+  return {
+    rig,
+    size: [w, h],
+    joints: J,
+    jointFractions: Object.fromEntries(Object.entries(J).map(([k, v]) => [k, k === 'mouthY' ? v / h : [v[0] / w, v[1] / h]])),
+    parts: Object.fromEntries(Object.entries(parts).map(([n, p]) => [n, p.canvas.toDataURL('image/png')])),
+  };
+};
+
+// Debug render: label map + joints, and a contact sheet of poses
+window.debugSheets = (anims) => {
+  const { rig, parts, cut, labels, w, h } = window.__last;
+  const COLORS = [[255,80,80],[255,160,200],[80,160,255],[80,255,120],[40,200,90],[255,220,60],[230,170,30],[180,90,255],[130,60,220],[60,230,230],[30,160,170]];
+  const lab = canvasOf(w, h); const g = lab.getContext('2d'); const im = g.createImageData(w, h);
+  for (let i = 0; i < w * h; i++) { if (labels[i] === 255) continue; const col = COLORS[labels[i]]; im.data.set([col[0], col[1], col[2], 200], i * 4); }
+  g.drawImage(cut, 0, 0); g.putImageData(im, 0, 0);
+  g.globalCompositeOperation = 'destination-over'; g.drawImage(cut, 0, 0); g.globalCompositeOperation = 'source-over';
+  for (const [k, v] of Object.entries(rig.joints)) { if (k === 'mouthY') continue; g.fillStyle = '#fff'; g.strokeStyle = '#000'; g.beginPath(); g.arc(v[0], v[1], 5, 0, 7); g.fill(); g.stroke(); }
+  g.strokeStyle = '#ff6fb1'; g.lineWidth = 2; g.beginPath(); g.moveTo(rig.joints.headTop[0] - 40, rig.joints.mouthY); g.lineTo(rig.joints.headTop[0] + 40, rig.joints.mouthY); g.stroke();
+  const images = Object.fromEntries(Object.entries(parts).map(([n, p]) => [n, p.canvas]));
+  const ch = new PhotoCharacter(rig, images, { headScale: rig.headScale });
+  const cw = 230, chh = 330, cols = Math.min(anims.length, 6);
+  const sheet = canvasOf(cols * cw, Math.ceil(anims.length / cols) * chh);
+  const sg = sheet.getContext('2d'); sg.fillStyle = '#7fa7c9'; sg.fillRect(0, 0, sheet.width, sheet.height);
+  anims.forEach((n, i) => {
+    const [name, t] = n.split('@');
+    const tt = parseFloat(t || '0.4');
+    const pose = animate(name, tt, { phase: tt * 8, skel: ch.skel, target: [30, -75], time: tt, talking: name === 'talk' });
+    ch.adjustPose(pose, name);
+    const J = fk(pose, ch.skel);
+    sg.save(); sg.translate((i % cols) * cw + cw / 2, Math.floor(i / cols) * chh + chh - 20 - (pose.grounded ? 0 : 20));
+    sg.scale(2.6, 2.6);
+    if (pose.rot) { sg.translate(pose.pivot[0], pose.pivot[1]); sg.rotate(pose.rot); sg.translate(-pose.pivot[0], -pose.pivot[1]); }
+    sg.scale(pose.sx, pose.sy); ch.draw(sg, pose, J); sg.restore();
+    sg.fillStyle = '#000'; sg.font = '13px sans-serif'; sg.fillText(n, (i % cols) * cw + 6, Math.floor(i / cols) * chh + 16);
+  });
+  return { labels: lab.toDataURL('image/png'), sheet: sheet.toDataURL('image/png') };
+};
+document.title = 'ready';
+</script></body></html>

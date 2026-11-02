@@ -157,8 +157,8 @@ export class PhotoCharacter {
     const key = `${name}:${Math.round(flush * 10)}`;
     if (!this.tintCache[key]) {
       const c = document.createElement('canvas');
-      c.width = img.naturalWidth;
-      c.height = img.naturalHeight;
+      c.width = img.naturalWidth || img.width;
+      c.height = img.naturalHeight || img.height;
       const g = c.getContext('2d');
       g.drawImage(img, 0, 0);
       g.globalCompositeOperation = 'source-atop';

@@ -279,7 +279,7 @@ function refreshMenus() {
       : []),
     { role: 'editMenu' },
     {
-      label: 'Buddy',
+      label: 'General Fok',
       submenu: petMenuTemplate().filter((i) => !i.accelerator || i.label.startsWith('Quit') === false),
     },
     { role: 'windowMenu' },

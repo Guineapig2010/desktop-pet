@@ -4,6 +4,8 @@
 export const LINES = {
   // ── Stage 0: friendly ─────────────────────────────────────────────
   friendly: [
+    "General Fok here, reporting for duty! First order of business: you. Albuquerque. Thoughts?",
+    "Attention, {user}! This is General Fok. I hereby invite you to Albuquerque. At ease.",
     "Hey {user}! Quick question. Ever been to Albuquerque? No? Let's fix that.",
     "You know what this desktop needs? More Albuquerque.",
     "Picture it: blue sky, mountains, a breakfast burrito the size of your forearm. Albuquerque, baby.",
@@ -19,6 +21,8 @@ export const LINES = {
   ],
   // ── Stage 1: persuasive salesman ─────────────────────────────────
   persuasive: [
+    "General Fok's strategic briefing: Objective, Albuquerque. Method, you say yes. Simple.",
+    "As your General, I've drawn up battle plans. Step one: breakfast burritos. There is no step two. Just more burritos.",
     "Okay, okay, hear me out. Albuquerque. But this time imagine it with a better attitude.",
     "What if I told you the state cookie is the biscochito? A state with an official cookie, {user}! What's YOUR state's cookie?",
     "I've prepared a presentation. Slide one: Albuquerque. Slide two: also Albuquerque. Slide three: you, in Albuquerque.",
@@ -45,6 +49,8 @@ export const LINES = {
   ],
   // ── Stage 3: impatient ──────────────────────────────────────────
   impatient: [
+    "That's an ORDER, {user}! Albuquerque! ...Please. Generals can say please.",
+    "General Fok does NOT like waiting. General Fok is waiting. Look at me waiting.",
     "Okay. OKAY. I've been patient. I've been SO patient. Albuquerque. Yes or yes?",
     "I've asked nicely. I've asked dramatically. Now I'm asking LOUDLY. ALBUQUERQUE!",
     "You know I can see you clicking things that aren't 'yes to Albuquerque', right?",
@@ -55,6 +61,7 @@ export const LINES = {
   ],
   // ── Meltdown ────────────────────────────────────────────────────
   meltdown: [
+    "INSUBORDINATION! General Fok has never been so DISRESPECTED! ...Okay, once. But this is worse!",
     "THAT'S IT! I've HAD it! Do you know how many sopapillas I've NOT eaten waiting for you?!",
     "UNBELIEVABLE! I offer you SUNSETS! MOUNTAINS! CHILE! And you give me NOTHING!",
     "ARGH! I'm gonna stomp! I'm stomping! LOOK AT ME STOMP, {user}!",
@@ -85,6 +92,7 @@ export const LINES = {
     "Did you just say yes?! Don't play with my heart, {user}. Do we have a deal?",
   ],
   acceptDeal: [
+    "MISSION ACCOMPLISHED! General Fok salutes you, {user}! Albuquerque, here we come!",
     "YES! YES! WOOOO! Pack your bags, {user}! Albuquerque, here we come!",
     "DEAL! I'm so happy I could hug your cursor! Actually... I will!",
     "We have a DEAL! I'm telling everyone! Hey Trash Can! We're going to Albuquerque!",
@@ -168,6 +176,9 @@ export const LINES = {
   ],
   // ── Ambient chatter (not part of the pitch) ─────────────────────
   ambient: [
+    "General Fok, standing by.",
+    "*salutes your wallpaper*",
+    "A General's work is never done. Mostly it's standing on windows.",
     "*hums a happy tune*",
     "Nice wallpaper. Needs more desert, though.",
     "Is it just me or is this screen getting smaller?",
@@ -186,12 +197,12 @@ export const LINES = {
   windowMoved: ["Whoa! Earthquake!", "Hey! I was standing there!", "Easy with the window!", "Turbulence!"],
   windowGone: ["HEY! Where'd my floor go?!", "Whoaaaa!", "Rude!", "Who closed that?!"],
   poked: ["Hehe, that tickles!", "What? What's up?", "Yes? Ready to talk Albuquerque?", "Hey there, {user}!", "Boop!"],
-  greet: ["Hey {user}! Miss me?", "I'm back! Did you think about Albuquerque while I was gone?", "Hiya {user}!"],
+  greet: ["General Fok, back on duty!", "Hey {user}! Miss me?", "I'm back! Did you think about Albuquerque while I was gone?", "Hiya {user}!"],
   wake: ["Huh? Oh! I was dreaming about chile.", "*yawn* What'd I miss?"],
   cursorNear: ["Ooh, there it is...", "Come a little closer...", "Shiny arrow..."],
   startled: ["Whoa!", "Yikes!", "Hey, careful!"],
   // ── Cursor chase ───────────────────────────────────────────────
-  chaseStart: ["I'M GONNA GET YOU!", "That cursor is MINE!", "Here I come!", "Get back here, little arrow!", "Hold still!"],
+  chaseStart: ["General Fok is ENGAGING the target!", "I'M GONNA GET YOU!", "That cursor is MINE!", "Here I come!", "Get back here, little arrow!", "Hold still!"],
   chaseMiss: ["Argh! So close!", "Missed!", "Hold STILL!", "Grrr!", "Stop moving!", "No fair!"],
   chaseGiveUp: [
     "Fine! Keep your stupid arrow!",
@@ -200,7 +211,7 @@ export const LINES = {
     "Okay, you win this round.",
     "I'm too tired. And too handsome to keep running.",
   ],
-  caught: ["GOTCHA!", "HA! Got it!", "It's MINE now!", "Caught it! Caught it!"],
+  caught: ["Target SECURED! General Fok wins again!", "GOTCHA!", "HA! Got it!", "It's MINE now!", "Caught it! Caught it!"],
   celebrate: ["Who's the champ? I'M the champ!", "Undefeated!", "Ha ha! The cursor king!", "Write that down, {user}!"],
   release: ["Okay, okay, you can have it back.", "Fine, you're free... for now.", "Go on, little arrow. Be free.", "I'll catch you again later."],
   slipped: ["It slipped!", "Hey! Come back!", "Too fast!"],

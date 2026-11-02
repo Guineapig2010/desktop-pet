@@ -1,0 +1,170 @@
+# Albuquerque Buddy 🎈 — starring General Fok
+
+A desktop companion for macOS starring **General Fok**: a big, grinning guy in a black patterned three-piece suit who lives on top of your wallpaper and windows. He wanders around, runs, jumps onto window edges, climbs them, chases your mouse pointer (and sometimes catches it), and keeps trying to talk you into coming to **Albuquerque, New Mexico**. You can also chat with him for real if you connect an AI service.
+
+![animations](docs/animations.png)
+
+![cursor gags and the Albuquerque pitch](docs/gags.png) ![chat panel](docs/chat.png)
+
+---
+
+## Run it on your Mac (simplest way)
+
+1. **Install Node.js** (one time). Download the **LTS** installer from <https://nodejs.org> and run it. If you use Homebrew, `brew install node` works too.
+2. **Get the project.** On the GitHub page pick the branch `claude/desktop-companion-app-4c2wej`, then **Code → Download ZIP**, and unzip it (for example into your Downloads folder).
+3. **Double-click `Start Buddy.command`** in the unzipped folder.
+   * The first time, macOS may say it's from an unidentified developer. **Right-click → Open → Open** instead.
+   * The first run installs everything (about a minute), then he drops onto your screen.
+
+Prefer Terminal? These do the same thing:
+
+```bash
+cd ~/Downloads/desktop-pet-claude-desktop-companion-app-4c2wej
+```
+
+```bash
+npm install
+```
+
+```bash
+npm start
+```
+
+### Optional: make a real app you can keep in Applications
+
+```bash
+npm run package:mac
+```
+
+This creates `dist/Albuquerque Buddy-darwin-arm64/Albuquerque Buddy.app` (or `-x64` on Intel Macs). Drag it into **Applications**. It's built on your own Mac, so it's not quarantined. It isn't code-signed, so if macOS complains, right-click → Open the first time.
+
+### Quitting
+
+Any of these work:
+* the **menu-bar icon** (his face, top right of the screen) → **Quit Albuquerque Buddy**
+* **right-click him** → **Quit Albuquerque Buddy**
+* **⌘Q** while the chat or settings window is focused
+* Settings → **Quit Albuquerque Buddy**
+
+Closing the chat panel does **not** quit (he keeps living on your desktop).
+
+---
+
+## What he does
+
+| | |
+|---|---|
+| **Moves around** | Stands on the bottom of the screen (just above the Dock), walks, struts, sprints across the screen, hops, stretches, sits, falls asleep if you leave the computer alone. Gravity, squash-and-stretch landings, dust puffs. |
+| **Window edges** | Jumps onto the top edges of your real windows, walks and sits on them, climbs up their sides, rides along when you drag a window, and yelps and falls when a window moves away or closes under him. Only the *visible* part of an edge counts (a window in front blocks it). |
+| **Your cursor** | Looks at it, gets startled by fast swipes, waves when you hover over him. Every so often he notices it ("!"), sprints, leaps, reaches, misses, stomps in frustration, tries again, and gives up with a tantrum if it's out of reach. When he catches it, his hands clamp around it (or he dangles from it in mid-air), he celebrates, then lets go. |
+| **Albuquerque** | At random times he starts a conversation in a speech bubble with answer buttons. Friendly → salesman → dramatic → impatient → full comic meltdown (red face, steam, stomping) → calms down with deep breaths → **"So, do we have a deal?"** Accept (confetti and a celebration), refuse (heartbroken flop, and he'll be back), bargain (increasingly ridiculous counter-offers) or ignore him (he knocks on the screen and sulks). After a deal he keeps planning the trip with you. Over 200 lines, drawn from shuffle bags so they don't repeat. |
+| **Chat panel** | Floating, draggable, resizable, minimisable to a slim bar. Message history, input box, Send/Stop, close. Shows his Albuquerque lines and your button answers too. You can answer his deal question by typing ("ok deal", "no way", "what if it's just a weekend?"). |
+
+### Controls
+
+* **Drag him** anywhere and **throw him** (he gets dizzy if you throw hard).
+* **Click** him to poke him, **double-click** to open the chat.
+* **Right-click** him for the menu (chat, talk about Albuquerque, chase my cursor, bigger/smaller, pause, hide, settings, quit).
+* **⌥ Option + scroll** over him to resize.
+* **Esc** frees the cursor immediately if you turned on cursor restraint (see below).
+* Transparent areas let every click through. Only his body and an open speech bubble catch the mouse.
+
+### Settings (menu-bar icon → Settings…, or ⌘,)
+
+Size, head size (photo character), movement speed, how often he chases your cursor (0 = never), how often he brings up Albuquerque (0 = never), his name and what he calls you, photo or cartoon look, sound on/off and volume, pause, stand on windows on/off, optional cursor restraint, low-power 30 fps mode, show in Dock, reset the storyline, AI service, and a big **Quit** button.
+
+---
+
+## His look: from your photo
+
+He comes in two styles:
+
+1. **Photo puppet**: your actual photo, cut out of its background and split into head, jaw, torso, upper/lower arms, thighs and shins. Each piece is animated on a skeleton, so it's really *him* walking, jumping and grabbing, paper-puppet style, with his jaw flapping when he talks and his face turning red when he's angry. If a hand is hidden in a pocket in the photo, a matching hand is drawn in when that arm moves.
+2. **Drawn cartoon**: a hand-drawn vector version (buzz cut, salt-and-pepper beard, squinting grin, black embossed-pattern three-piece suit, vest with gold watch chain, pocket square, black textured shoes, hand-on-lapel pose). Used when no photo character is available.
+
+**To use your photo in the app:** menu-bar icon → **Use my photo…**
+
+1. Choose the full-body photo.
+2. Click **✨ macOS subject lift**, which uses Apple's Vision framework (macOS 14 Sonoma or newer) to remove the background. Alternatives: Preview → *Tools → Remove Background*, or Finder → right-click → *Quick Actions → Remove Background*, then import that PNG. There's also a flood-fill for plain backgrounds and an erase/restore brush for touch-ups.
+3. Drag the dots onto his neck, shoulders, elbows, hands, hips, knees and ankles, and the pink line onto his mouth. A live preview shows him idling, walking, running, talking, celebrating and more.
+4. **Save & use him.** The parts are stored in your user folder (`~/Library/Application Support/Albuquerque Buddy/character`).
+
+**To build the photo character into the project** (so it's the default for everyone): put the photo in `assets/character/`, then run `node scripts/build-character.mjs assets/character/source.jpg`. This needs Python with `rembg` for background removal, or pass an already-transparent PNG with `--cutout`. Joint positions can be tuned with `--joints joints.json`. It writes `assets/character/photo/` plus debug sheets.
+
+---
+
+## Chat AI: optional, your own key
+
+Without any AI the app still does everything except free-form chat. The panel then says **"Offline · scripted replies (not AI)"** with a yellow banner, and he answers from a small script (time, date, arithmetic, jokes, Albuquerque facts) and tells you plainly when he can't answer.
+
+To really chat, open **Settings → Chat AI**:
+
+* **Claude (Anthropic API)**: get a key at <https://console.anthropic.com/settings/keys> and paste it in. Uses the official Anthropic SDK with streaming. Default model `claude-opus-5-5`, which costs **$4 per million input tokens and $20 per million output tokens**. A typical short chat reply is a fraction of a cent. For a much cheaper option, set the model to `claude-haiku-5-5` ($0.10 / $0.50 per million). You pay Anthropic directly for what you use.
+* **OpenAI-compatible**: any service with a Chat Completions API: OpenAI, OpenRouter, or **free local models** with [Ollama](https://ollama.com) (`ollama pull llama3.2`, base URL `http://localhost:11434/v1`, no key needed).
+
+Use **Test connection** to check it. Bad keys, missing credit, no internet, etc. show up as a clear message in the chat.
+
+**How your key is stored:** encrypted with your macOS Keychain (Electron `safeStorage`) in `secrets.json` in the app's user folder. It's never written in plain text, never shown again, never sent to any window of the app (only the background process uses it), and only ever sent to the service you picked. Nothing is hard-coded. You can also provide `ANTHROPIC_API_KEY` / `OPENAI_API_KEY` as environment variables. "Remove" deletes it.
+
+He stays in character (warm, theatrical, Albuquerque-obsessed) but is instructed to always answer your actual question first and only occasionally steer back to Albuquerque.
+
+---
+
+## Permissions on macOS
+
+* **None are required** for the normal experience:
+  * Reading where your windows are (for ledges) uses `CGWindowListCopyWindowInfo` window *bounds*, which macOS gives without Screen Recording permission. The app never reads window titles or contents.
+  * Reading the cursor position needs no permission.
+* **Cursor restraint** (Settings, **off by default**) briefly tugs the real pointer back towards his hands, for at most 1.5 seconds. **Esc** or a hard pull frees it instantly. It moves the pointer with `CGWarpMouseCursorPosition`, which normally needs no permission. If your Mac blocks it, the grab simply stays visual-only.
+* **If window tracking isn't available** (another OS, or something blocks the helper), Settings shows the reason, and he simply uses the bottom of the screen. Everything else keeps working. You can also turn ledges off yourself.
+* The helpers are tiny JavaScript-for-Automation scripts run with the built-in `osascript` (see `src/main/helpers/`), so there's nothing extra to install and no compiled binaries.
+
+---
+
+## Tested vs. not tested (honest status)
+
+I built and tested this in a Linux cloud container, **not on a Mac**.
+
+**Tested (automated, in the real Electron app on Linux under a virtual display, `npm run test:e2e`, 25 steps passing):** overlay window boots transparent and click-through; becomes clickable only over his body and stays click-through elsewhere; gravity and landing on the screen bottom; landing on window ledges, riding a moving window, falling when it closes, ledge occlusion by front windows; climbing a window side onto its top; cursor chase with ground grab and release, leap → miss → frustration → give-up with an unreachable cursor, mid-air catch and hang; drag and throw; resizing; Albuquerque pitch with answer buttons, escalation → meltdown → calm-down → "So, do we have a deal?" → bargain → accept with celebration; ignoring (timeout); answering by typing in chat; offline chat clearly labelled; chat streaming against a mock Claude API (persona, history, key never reaches the UI); bad-key error; OpenAI-compatible endpoint (mock); chat collapse/expand/close; settings window and pause; **Quit exits the app**. Plus 19 unit tests (`npm test`) for the storyline, physics/platform geometry, kinematics, offline replies and message formatting. Fake windows and a fake cursor are injected for these tests.
+
+**Not tested — needs a Mac to confirm:**
+* The macOS-only pieces: the real-window tracker helper (`mac-windows.js`), cursor restraint (`mac-cursor.js`) and Vision subject lift (`mac-subject-lift.js`). They're written against documented macOS APIs and fail safe (ledges off / grab stays visual / importer shows an error and suggests Preview).
+* Click-through and transparency on the real macOS window server, the menu-bar icon, Dock behaviour, Spaces/full-screen apps, multiple displays (he lives on your main display; pick another with the `displayId` setting).
+* `npm run package:mac` (packaging must run on a Mac).
+* A live Claude or OpenAI account (tested against local mock servers only, since no key was available).
+* Sound effects (synthesised with WebAudio; there's no audio device in the container).
+
+**Known limitations:** windows are polled about 10 times a second, so he can lag a little behind a window you drag fast. The photo character is a paper-puppet cut-out (limbs rotate in the picture's plane) and its eyes don't blink. Window tracking is macOS-only (Windows/Linux fall back to the screen bottom).
+
+---
+
+## Project layout
+
+```
+src/main/            Electron main process
+  main.js            windows (overlay, chat, settings, importer), tray + menus, IPC, chat orchestration, quit
+  ai.js              Claude (Anthropic SDK), OpenAI-compatible, offline scripted replies, persona prompt
+  secrets.js         Keychain-encrypted API key storage (safeStorage)
+  store.js           settings / story / chat-history JSON stores + defaults
+  windowTracker.js   real window rectangles → ledges
+  restraint.js       optional, brief, Esc-cancellable cursor restraint
+  helpers/*.js       macOS JXA helpers (window list, cursor warp, Vision subject lift)
+src/preload/         safe bridge between windows and main
+src/renderer/
+  overlay/           the transparent stage: game loop, pet physics + behaviours + chase, bubbles, sounds, effects
+  shared/            rig + kinematics, animations, drawn character, photo puppet, segmentation, storyline, dialogue, world
+  chat/              floating chat panel
+  settings/          settings window
+  importer/          "Use my photo" tool
+assets/              icons, tray icons, avatar, character assets (photo character goes in assets/character/photo)
+scripts/             build-character (photo → rig), icon rendering, preview sheets
+test/unit/           node:test unit tests          → npm test
+test/e2e/            Playwright + Electron e2e       → npm run test:e2e  (on Linux: xvfb-run -a npm run test:e2e)
+```
+
+### Troubleshooting
+
+* **He isn't there:** check the menu-bar icon → *Show him*, or *Bring him back to the middle*.
+* **Too chatty / too chase-y:** lower the sliders in Settings, or set them to 0.
+* **Chat says Offline:** that's expected until you connect a service in Settings → Chat AI.
+* **Debug logs:** start with `BUDDY_DEBUG=1 npm start`.

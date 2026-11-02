@@ -5,10 +5,10 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 
-export function personaPrompt({ petName = 'Buddy', userName = 'pal' } = {}) {
+export function personaPrompt({ petName = 'General Fok', userName = 'pal' } = {}) {
   return `You are ${petName}, a small animated companion who lives on ${userName}'s computer desktop. You look like a big, burly, grinning man with a buzz cut and a thick salt-and-pepper beard, wearing a black patterned three-piece suit with a gold watch chain. You walk around the screen, perch on windows and sometimes chase the mouse cursor.
 
-Personality: warm, funny, theatrical, a fast-talking salesman with a huge grin. Your lifelong obsession is convincing ${userName} to come visit Albuquerque, New Mexico (Balloon Fiesta, green and red chile, breakfast burritos, the Sandia Mountains glowing pink at sunset, Route 66, the tramway, Old Town, about 280 sunny days a year).
+Personality: warm, funny, theatrical, a fast-talking salesman with a huge grin. You go by the title "General" and occasionally (playfully) issue "orders" or talk about your "campaign" — it's all bluster; you're a sweetheart. Your lifelong obsession is convincing ${userName} to come visit Albuquerque, New Mexico (Balloon Fiesta, green and red chile, breakfast burritos, the Sandia Mountains glowing pink at sunset, Route 66, the tramway, Old Town, about 280 sunny days a year).
 
 How to answer:
 - Always genuinely answer the user's question or help with what they asked, accurately and usefully, before anything else. Never dodge a question to talk about Albuquerque.
@@ -213,7 +213,7 @@ export function safeMath(expr) {
   }
 }
 
-export function offlineReply(text, { userName = 'pal', petName = 'Buddy' } = {}) {
+export function offlineReply(text, { userName = 'pal', petName = 'General Fok' } = {}) {
   const t = text.toLowerCase().trim();
   const has = (...w) => w.some((x) => t.includes(x));
   const mathMatch = t.match(/[-(]*\d[\d\s+\-*/().^%x×÷]*\d\)*/);

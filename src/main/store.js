@@ -69,7 +69,7 @@ export const DEFAULT_SETTINGS = {
   hidden: false,
   displayId: null,
   userName: 'pal',
-  petName: 'Buddy',
+  petName: 'General Fok',
   character: 'photo', // 'photo' (if available) or 'cartoon'
   ai: {
     provider: 'none', // none | anthropic | openai

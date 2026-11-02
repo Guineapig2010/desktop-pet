@@ -148,13 +148,13 @@ $('name').addEventListener('dblclick', () => $('collapseBtn').click());
 
 api.onAiStatus(refreshStatus);
 api.onSettings((s) => {
-  $('name').textContent = s.petName || 'Buddy';
+  $('name').textContent = s.petName || 'General Fok';
   refreshStatus();
 });
 
 (async () => {
   const s = await api.getSettings();
-  $('name').textContent = s.petName || 'Buddy';
+  $('name').textContent = s.petName || 'General Fok';
   const hist = await api.chatHistory();
   hist.slice(-120).forEach(add);
   showEmpty();

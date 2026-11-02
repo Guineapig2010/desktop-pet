@@ -134,8 +134,9 @@ async function playBeat(beat) {
   pet.convHop = false;
   if (conv.aborted) return 'aborted';
   if (beat.choices) {
+    conv.answeredViaChat = false;
     const id = await bubble.ask(beat.choices, beat.timeout);
-    if (id !== 'aborted' && id !== 'ignore') {
+    if (id !== 'aborted' && id !== 'ignore' && !conv.answeredViaChat) {
       const label = beat.choices.find((c) => c.id === id)?.label;
       if (label) mirrorToChat('user', label);
     }
@@ -378,6 +379,7 @@ api.onCommand(async ({ cmd, data }) => {
       if (ids.length) {
         const id = classifyReply(data.text, ids);
         if (id) {
+          conv.answeredViaChat = true; // the typed text is already in the chat log
           bubble.pick(id);
           api.chatAnswered({ handled: true });
           return;
