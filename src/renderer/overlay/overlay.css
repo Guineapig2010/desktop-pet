@@ -1,0 +1,80 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: transparent;
+  user-select: none;
+  -webkit-user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
+}
+#stage { position: fixed; inset: 0; width: 100%; height: 100%; }
+#ui { position: fixed; inset: 0; pointer-events: none; }
+body.grab #stage { cursor: grab; }
+body.dragging #stage { cursor: grabbing; }
+
+.bubble {
+  position: absolute;
+  left: 0; top: 0;
+  max-width: 280px;
+  min-width: 90px;
+  padding: 11px 14px 12px;
+  background: #fffdf7;
+  color: #1d1a17;
+  border: 2.5px solid #1d1a17;
+  border-radius: 18px;
+  box-shadow: 3px 4px 0 rgba(0,0,0,0.25);
+  font-size: 14.5px;
+  line-height: 1.32;
+  font-weight: 600;
+  pointer-events: auto;
+  transition: opacity 0.15s ease, background 0.2s ease;
+  will-change: transform;
+}
+.bubble.hidden { opacity: 0; pointer-events: none; }
+.bubble-tail {
+  position: absolute;
+  bottom: -11px;
+  width: 16px; height: 16px;
+  background: inherit;
+  border-right: 2.5px solid #1d1a17;
+  border-bottom: 2.5px solid #1d1a17;
+  transform: rotate(45deg) skew(8deg, 8deg);
+}
+.bubble.below .bubble-tail { bottom: auto; top: -11px; transform: rotate(225deg) skew(8deg, 8deg); }
+.bubble.mood-furious { background: #ffe3dc; font-size: 16px; font-weight: 800; text-transform: none; animation: shake 0.12s infinite; }
+.bubble.mood-annoyed { background: #fff1d6; }
+.bubble.mood-dramatic { background: #f3ecff; font-style: italic; }
+.bubble.mood-ecstatic { background: #e5ffe0; }
+.bubble.mood-calm { background: #e8f6ff; }
+.bubble.mood-chat { background: #f2f7ff; font-weight: 500; }
+@keyframes shake { 0% { margin-left: -1px; } 50% { margin-left: 1px; } 100% { margin-left: -1px; } }
+
+.bubble-choices { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+.bubble-choices:empty { display: none; margin: 0; }
+.bubble-choices button {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 2px solid #1d1a17;
+  background: #3fb6a8;
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 2px 0 #1d1a17;
+}
+.bubble-choices button:nth-child(2) { background: #e0574a; }
+.bubble-choices button:nth-child(3) { background: #f2b33d; color: #1d1a17; }
+.bubble-choices button:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.bubble-choices button:active { transform: translateY(1px); box-shadow: none; }
+.bubble-timer {
+  display: none;
+  height: 3px;
+  margin-top: 8px;
+  border-radius: 2px;
+  background: #1d1a17;
+  opacity: 0.25;
+  transform-origin: left center;
+}

@@ -32,6 +32,7 @@ function lapelArms(p, t) {
   p.hand.N = 'fist';
   p.arm.F = [-0.22, 0.55];
   p.hand.F = 'pocket';
+  p.lapel = 'both';
 }
 
 export const ANIMS = {
@@ -80,6 +81,7 @@ export const ANIMS = {
     ANIMS.walk(p, t, c);
     p.arm.N = [0.08, 3.2];
     p.hand.N = 'fist';
+    p.lapel = 'N';
     p.lean = -0.02;
   },
   run(p, t, c) {
@@ -361,6 +363,7 @@ export const ANIMS = {
     ANIMS.sit(p, t);
     p.arm.N = [0.4, 2.9];
     p.hand.N = 'fist';
+    p.lapel = 'N';
   },
   sleep(p, t) {
     ANIMS.sit(p, t);

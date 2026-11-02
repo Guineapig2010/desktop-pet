@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob: buddy:; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+  <title>Use my photo</title>
+  <link rel="stylesheet" href="importer.css" />
+</head>
+<body>
+  <aside>
+    <h1>Use my photo</h1>
+    <ol>
+      <li><b>Pick a full-body photo</b> (head to shoes).<br/><button id="choose">Choose photo…</button></li>
+      <li><b>Remove the background</b>
+        <div class="col">
+          <button id="lift">✨ macOS subject lift (best)</button>
+          <label class="inline">Plain background? <input id="tol" type="range" min="5" max="90" value="38" /> <button id="flood">Flood-fill</button></label>
+          <div class="inline">Brush: <button id="erase" class="tool">Erase</button><button id="restore" class="tool">Restore</button><input id="brush" type="range" min="4" max="80" value="22" /></div>
+        </div>
+        <p class="hint">Tip: you can also use Preview → Tools → Remove Background (or right-click in Finder → Quick Actions → Remove Background) and import that PNG.</p>
+      </li>
+      <li><b>Line up the joints</b> — drag the dots onto his neck, shoulders, elbows, hands, hips, knees and ankles. The pink line marks the mouth (his jaw moves below it when he talks).
+        <div class="col">
+          <button id="autoJoints">Re-guess joints</button>
+          <label class="inline"><input type="checkbox" id="hideN" /> right-side hand is hidden (pocket)</label>
+          <label class="inline"><input type="checkbox" id="hideF" checked /> left-side hand is hidden (pocket)</label>
+        </div>
+      </li>
+      <li><b>Check the preview</b>, then <button id="save" class="primary">Save &amp; use him</button></li>
+    </ol>
+    <p id="msg" class="msg"></p>
+    <div class="foot"><button id="useCartoon" class="ghost">Use the drawn cartoon instead</button><button id="resetImport" class="ghost">Remove imported photo</button></div>
+  </aside>
+  <main>
+    <div class="stage" id="stageWrap"><canvas id="edit"></canvas><canvas id="handles"></canvas><div class="placeholder" id="placeholder">Choose a photo to begin</div></div>
+    <div class="preview"><canvas id="preview" width="320" height="420"></canvas><div class="pv-buttons"><button data-anim="idle">Idle</button><button data-anim="walk">Walk</button><button data-anim="run">Run</button><button data-anim="talk">Talk</button><button data-anim="angry">Angry</button><button data-anim="celebrate">Celebrate</button><button data-anim="grab">Grab</button><button data-anim="fall">Fall</button><button data-anim="climb">Climb</button><button data-anim="sit">Sit</button></div></div>
+  </main>
+  <script type="module" src="importer.js"></script>
+</body>
+</html>

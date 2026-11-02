@@ -1,0 +1,26 @@
+* { box-sizing: border-box; }
+body { margin: 0; display: flex; height: 100vh; background: #1d1a20; color: #efe9e2; font: 13px/1.45 -apple-system, BlinkMacSystemFont, "Avenir Next", "Helvetica Neue", sans-serif; }
+aside { width: 330px; flex: none; padding: 18px; overflow-y: auto; border-right: 1px solid #343039; }
+h1 { font-size: 18px; margin: 0 0 10px; }
+ol { padding-left: 18px; }
+li { margin-bottom: 14px; }
+.col { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.inline { display: flex; align-items: center; gap: 6px; }
+.inline input[type=range] { flex: 1; }
+button { padding: 6px 10px; border-radius: 8px; border: 1px solid #45404c; background: #322d38; color: #efe9e2; font: inherit; cursor: pointer; }
+button:hover { background: #3c3643; }
+button.primary { background: #2fa596; border-color: #3cbfad; font-weight: 700; }
+button.ghost { background: transparent; }
+button.tool.on { background: #f2b33d; color: #1d1a20; }
+.hint { color: #9a92a3; font-size: 11.5px; }
+.msg { color: #f2c66d; min-height: 1.4em; }
+.msg.bad { color: #ff8f84; }
+.foot { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
+main { flex: 1; display: flex; gap: 12px; padding: 12px; min-width: 0; }
+.stage { position: relative; flex: 1; border-radius: 12px; overflow: hidden; background: repeating-conic-gradient(#2a2630 0% 25%, #232028 0% 50%) 50% / 24px 24px; }
+.stage canvas { position: absolute; left: 0; top: 0; }
+#handles { cursor: crosshair; }
+.placeholder { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #9a92a3; font-size: 15px; }
+.preview { width: 340px; flex: none; display: flex; flex-direction: column; gap: 8px; }
+#preview { background: linear-gradient(#7fa7c9, #b9d3e8 70%, #c9b48f 70%); border-radius: 12px; width: 320px; height: 420px; }
+.pv-buttons { display: flex; flex-wrap: wrap; gap: 5px; }

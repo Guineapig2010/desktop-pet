@@ -1,0 +1,28 @@
+* { box-sizing: border-box; }
+body { margin: 0; background: #1d1a20; color: #efe9e2; font: 13.5px/1.45 -apple-system, BlinkMacSystemFont, "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif; }
+.drag { height: 28px; -webkit-app-region: drag; position: sticky; top: 0; background: #1d1a20; z-index: 2; }
+main { padding: 0 26px 30px; max-width: 640px; margin: 0 auto; }
+h1 { font-size: 20px; margin: 4px 0 14px; }
+h1 .sub { color: #9a92a3; font-weight: 500; }
+h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.8px; color: #f2b33d; margin: 0 0 10px; }
+section { background: #252129; border: 1px solid #343039; border-radius: 12px; padding: 16px 16px 12px; margin-bottom: 14px; }
+.row { display: flex; align-items: center; gap: 10px; margin: 8px 0; }
+.row > span:first-child { width: 170px; flex: none; color: #cfc7d6; }
+.row input[type=range] { flex: 1; accent-color: #2fa596; }
+.row output { width: 46px; text-align: right; color: #9a92a3; font-variant-numeric: tabular-nums; }
+input[type=text], input[type=password], select { flex: 1; padding: 6px 9px; border-radius: 8px; border: 1px solid #3d3844; background: #1c1920; color: #efe9e2; font: inherit; }
+.check { display: flex; gap: 8px; align-items: flex-start; margin: 9px 0; cursor: pointer; }
+.check input { margin-top: 3px; accent-color: #2fa596; }
+.hint { color: #9a92a3; font-size: 12px; margin: 4px 0 8px; }
+.hint code, .hint a { color: #f2c66d; }
+.buttons { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; align-items: center; }
+button { padding: 7px 12px; border-radius: 8px; border: 1px solid #45404c; background: #322d38; color: #efe9e2; font: inherit; cursor: pointer; }
+button:hover { background: #3c3643; }
+button.ghost { background: transparent; }
+button.danger { background: #a8352b; border-color: #c4483d; font-weight: 700; }
+button.danger:hover { background: #c4483d; }
+.provider { display: none; }
+.provider.on { display: block; }
+.result { font-size: 12px; color: #9a92a3; }
+.result.ok { color: #5fd697; }
+.result.bad { color: #ff8f84; }

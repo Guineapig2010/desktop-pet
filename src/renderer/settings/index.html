@@ -1,0 +1,84 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:" />
+  <title>Albuquerque Buddy — Settings</title>
+  <link rel="stylesheet" href="settings.css" />
+</head>
+<body>
+  <div class="drag"></div>
+  <main>
+    <h1>Albuquerque Buddy <span class="sub">Settings</span></h1>
+
+    <section>
+      <h2>Him</h2>
+      <label class="row"><span>Size</span><input type="range" id="size" min="0.4" max="3" step="0.05" /><output id="sizeOut"></output></label>
+      <label class="row photo-only"><span>Head size (photo)</span><input type="range" id="headScale" min="1" max="1.8" step="0.05" /><output id="headScaleOut"></output></label>
+      <label class="row"><span>Movement speed</span><input type="range" id="speed" min="0.3" max="2.5" step="0.05" /><output id="speedOut"></output></label>
+      <label class="row"><span>Cursor chasing</span><input type="range" id="chaseFrequency" min="0" max="1" step="0.05" /><output id="chaseFrequencyOut"></output></label>
+      <label class="row"><span>Talking about Albuquerque</span><input type="range" id="dialogueFrequency" min="0" max="1" step="0.05" /><output id="dialogueFrequencyOut"></output></label>
+      <label class="row"><span>His name</span><input type="text" id="petName" maxlength="30" /></label>
+      <label class="row"><span>He calls you</span><input type="text" id="userName" maxlength="30" /></label>
+      <div class="row"><span>Look</span>
+        <select id="character"><option value="photo">From the photo</option><option value="cartoon">Drawn cartoon</option></select>
+        <button id="importBtn">Use my photo…</button>
+      </div>
+      <p class="hint" id="charHint"></p>
+      <div class="buttons">
+        <button id="talkBtn">Talk about Albuquerque now</button>
+        <button id="chaseBtn">Chase my cursor now</button>
+        <button id="summonBtn">Bring him to the middle</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Behaviour</h2>
+      <label class="check"><input type="checkbox" id="paused" /> Pause him (no wandering, chasing or talking)</label>
+      <label class="check"><input type="checkbox" id="sound" /> Sound effects and voice blips</label>
+      <label class="row"><span>Volume</span><input type="range" id="volume" min="0" max="1" step="0.05" /><output id="volumeOut"></output></label>
+      <label class="check"><input type="checkbox" id="useWindows" /> Stand, sit and climb on real windows</label>
+      <p class="hint" id="windowHint"></p>
+      <label class="check"><input type="checkbox" id="cursorRestraint" /> Let him actually hold the cursor for a moment (max 1.5 s, <b>Esc</b> always frees it)</label>
+      <p class="hint" id="restraintHint"></p>
+      <label class="check"><input type="checkbox" id="lowPower" /> Low-power mode (30 fps)</label>
+      <label class="check mac-only"><input type="checkbox" id="showInDock" /> Show in the Dock</label>
+      <div class="buttons"><button id="resetStory">Reset the Albuquerque storyline</button></div>
+    </section>
+
+    <section>
+      <h2>Chat AI</h2>
+      <p class="hint">Without an AI service he still works: wandering, chasing and the scripted Albuquerque conversations. The chat panel is then clearly marked <b>Offline · scripted</b>.</p>
+      <div class="row"><span>Service</span>
+        <select id="provider">
+          <option value="none">None (offline, scripted)</option>
+          <option value="anthropic">Claude (Anthropic API)</option>
+          <option value="openai">OpenAI-compatible (OpenAI, Ollama, LM Studio…)</option>
+        </select>
+      </div>
+      <div class="provider anthropic">
+        <label class="row"><span>Model</span><input type="text" id="anthropicModel" placeholder="claude-opus-5-5" /></label>
+        <p class="hint">Needs your own key from <a href="#" data-url="https://console.anthropic.com/settings/keys">console.anthropic.com</a>. Billed per use by Anthropic: Claude Opus 5.5 is $4 per million input tokens and $20 per million output tokens, so a typical chat reply costs well under a cent. Cheaper option: <code>claude-haiku-5-5</code> ($0.10 / $0.50 per million).</p>
+        <label class="row"><span>API key</span><input type="password" id="anthropicKey" placeholder="sk-ant-…" autocomplete="off" /><button id="saveAnthropic">Save</button><button id="clearAnthropic" class="ghost">Remove</button></label>
+        <p class="hint" id="anthropicKeyHint"></p>
+      </div>
+      <div class="provider openai">
+        <label class="row"><span>Base URL</span><input type="text" id="openaiBaseUrl" placeholder="https://api.openai.com/v1" /></label>
+        <label class="row"><span>Model</span><input type="text" id="openaiModel" placeholder="e.g. gpt-4.1-mini, or llama3.2 for Ollama" /></label>
+        <p class="hint">Free and local: install <a href="#" data-url="https://ollama.com">Ollama</a>, run <code>ollama pull llama3.2</code>, then use base URL <code>http://localhost:11434/v1</code> (no key needed). Hosted services bill per use on your own account.</p>
+        <label class="row"><span>API key</span><input type="password" id="openaiKey" placeholder="optional for local servers" autocomplete="off" /><button id="saveOpenai">Save</button><button id="clearOpenai" class="ghost">Remove</button></label>
+        <p class="hint" id="openaiKeyHint"></p>
+      </div>
+      <div class="buttons"><button id="testAi">Test connection</button><span id="testResult" class="result"></span></div>
+      <p class="hint">Keys are encrypted with your Mac's Keychain (Electron safeStorage) and stored only on this computer. They are never shown again, never put in the app's code, and only sent to the service you pick.</p>
+    </section>
+
+    <section>
+      <h2>About</h2>
+      <p class="hint" id="about"></p>
+      <div class="buttons"><button id="quitBtn" class="danger">Quit Albuquerque Buddy</button></div>
+    </section>
+  </main>
+  <script type="module" src="settings.js"></script>
+</body>
+</html>
