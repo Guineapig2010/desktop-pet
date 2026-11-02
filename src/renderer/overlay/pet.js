@@ -529,6 +529,154 @@ class Chase extends Action {
   }
 }
 
+// ── Helper mode: jetpack flight to a target on screen ──────────────────────
+// Phases: equip → fly (to a hover point BESIDE the target) → hover (main verifies the target)
+// → reach (hand moves onto the target; main clicks at the moment of touch) → press → hold
+// → (next target… or) return → land.
+class Fly extends Action {
+  get interruptible() {
+    return false;
+  }
+  start(p) {
+    this.phase = 'equip';
+    this.pt = 0;
+    p.mode = 'fly';
+    p.platform = null;
+    p.vx = p.vy = 0;
+    p.jetpackOn = true;
+    p.sound('whoosh');
+  }
+  setPhase(ph) {
+    this.phase = ph;
+    this.pt = 0;
+  }
+  /** New target (overlay-local px). purpose: click | point | scroll | type | hover */
+  retarget(t) {
+    Object.assign(this, t);
+    const p = this.pet;
+    const H = p.H, W = p.world.width;
+    // stay BESIDE the target so we never cover it: pick the side with room / the side we're on
+    let side = p.x <= t.x ? -1 : 1;
+    if (t.x + H * 0.75 > W) side = -1;
+    if (t.x - H * 0.75 < 0) side = 1;
+    this.side = side;
+    const k = p.k;
+    this.hx = t.x + side * 40 * k;
+    this.hy = clamp(t.y + 70 * k, H * 1.02, p.world.height);
+    if (this.phase !== 'equip') this.setPhase('fly');
+  }
+  update(p, dt) {
+    this.pet = p;
+    this.pt += dt;
+    const H = p.H;
+    p.thrust = lerp(p.thrust || 0, this.phase === 'fly' || this.phase === 'return' ? 1 : this.phase === 'equip' ? 0.3 : 0.55, damp(6, dt));
+    switch (this.phase) {
+      case 'equip':
+        p.jetpack = Math.min(1, this.pt / 0.35);
+        if (this.pt > 0.45) this.setPhase(this.hx != null ? 'fly' : 'hold');
+        return false;
+      case 'fly':
+      case 'return': {
+        const tx = this.phase === 'return' ? this.landX : this.hx;
+        const ty = this.phase === 'return' ? this.landY - 2 : this.hy;
+        const dx = tx - p.x, dy = ty - p.y;
+        const d = Math.hypot(dx, dy);
+        const maxV = 1150 * clamp(p.speedMul, 0.5, 2);
+        // arrive steering: slow down near the goal (brake)
+        const want = Math.min(maxV, d * 4.2);
+        const dvx = (d > 0.01 ? (dx / d) * want : 0) - p.vx, dvy = (d > 0.01 ? (dy / d) * want : 0) - p.vy;
+        const acc = 3400;
+        const dl = Math.hypot(dvx, dvy);
+        const s = dl > acc * dt ? (acc * dt) / dl : 1;
+        p.vx += dvx * s;
+        p.vy += dvy * s;
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.facing = Math.abs(p.vx) > 40 ? sign(p.vx) : p.facing;
+        if (Math.random() < dt * 30) {
+          const n = p.nozzleWorld();
+          p.fx.smoke(n[0], n[1], H / 150);
+        }
+        if (d < 3 && Math.hypot(p.vx, p.vy) < 60) {
+          p.vx = p.vy = 0;
+          if (this.phase === 'return') {
+            p.y = this.landY;
+            p.mode = 'air';
+            p.vy = 10;
+            p.jetpackOff = true;
+            return true;
+          }
+          p.facing = -this.side;
+          this.setPhase('hover');
+          p.host.event?.('helperHovering', { id: this.id });
+        }
+        return false;
+      }
+      case 'hover':
+      case 'hold':
+        p.x = lerp(p.x, this.hx ?? p.x, damp(6, dt));
+        p.y = lerp(p.y, this.hy ?? p.y, damp(6, dt));
+        if (this.hx != null) p.facing = -this.side;
+        return false;
+      case 'reach': {
+        const dur = 0.32;
+        this.reachK = Math.min(1, this.pt / dur);
+        if (this.pt >= dur && !this.touched) {
+          this.touched = true;
+          p.host.event?.('helperTouch', { id: this.id });
+        }
+        return false;
+      }
+      case 'press':
+        if (this.pt > 0.35) this.setPhase(this.purpose === 'point' ? 'pointing' : 'hold');
+        return false;
+      case 'pointing':
+        return false;
+    }
+    return false;
+  }
+  reach(id) {
+    if (id !== this.id) return;
+    this.touched = false;
+    this.setPhase('reach');
+  }
+  pressed() {
+    this.setPhase('press');
+  }
+  finish() {
+    const p = this.pet;
+    const below = p.world.findLanding(p.x, p.y, p.world.height + 1) || p.world.ground;
+    this.landX = clamp(p.x, p.H * 0.4, p.world.width - p.H * 0.4);
+    this.landY = below.y;
+    this.setPhase('return');
+  }
+  anim(p) {
+    const tgt = this.x != null ? p.toLocal(this.x, this.y) : null;
+    switch (this.phase) {
+      case 'fly':
+      case 'return':
+      case 'equip':
+        return { name: 'fly', ctx: { swing: clamp(Math.abs(p.vx) * 0.00035, 0, 0.38) - clamp(p.vy * 0.0001, -0.1, 0.1) } };
+      case 'reach': {
+        // move the hand smoothly from the chest to the target
+        const k = this.reachK || 0;
+        const start = [20, -60];
+        const tt = tgt ? [start[0] + (tgt[0] - start[0]) * k, start[1] + (tgt[1] - start[1]) * k] : null;
+        return { name: this.purpose === 'scroll' ? 'scrolling' : 'reach', ctx: { target: tt, skel: p.character.skel } };
+      }
+      case 'press':
+        return { name: 'reach', ctx: { target: tgt && [tgt[0] + 1.5, tgt[1] + 1.5], skel: p.character.skel, press: true } };
+      case 'pointing':
+        return { name: 'point', ctx: { target: tgt, skel: p.character.skel } };
+      case 'hold':
+        if (this.typing) return { name: 'typing' };
+        return { name: tgt && this.purpose !== 'type' ? 'reach' : 'hover', ctx: { target: tgt, skel: p.character.skel } };
+      default:
+        return { name: 'hover' };
+    }
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 export class Pet {
   constructor({ world, character, settings, fx, host }) {
@@ -786,6 +934,7 @@ export class Pet {
   }
 
   startDrag(px, py) {
+    if (this.action instanceof Fly) return;
     const [u, v] = this.toLocal(px, py);
     this.drag = { active: true, x: px, y: py, ox: px - this.x, oy: py - this.y, pivot: [u, v] };
     this.endCatch();
@@ -813,7 +962,7 @@ export class Pet {
   canConverse() {
     if (this.mode !== 'ground') return false;
     if (this.action && !this.action.interruptible) return false;
-    if (this.action instanceof Chase || this.action instanceof Held || this.action instanceof Climb) return false;
+    if (this.action instanceof Chase || this.action instanceof Held || this.action instanceof Climb || this.action instanceof Fly) return false;
     return true;
   }
 
@@ -834,11 +983,51 @@ export class Pet {
     this.say('greet');
   }
 
+  // ── helper mode (jetpack) ────────────────────────────────────────────────
+  helperFly(t) {
+    let f = this.action instanceof Fly ? this.action : null;
+    if (!f) {
+      this.endCatch();
+      this.conversing = false;
+      f = new Fly();
+      f.pet = this;
+      this.interrupt(f);
+    }
+    f.pet = this;
+    f.retarget(t);
+    return f;
+  }
+  helperReach(id) {
+    if (this.action instanceof Fly) this.action.reach(id);
+  }
+  helperPressed() {
+    if (this.action instanceof Fly) this.action.pressed();
+  }
+  helperTyping(on) {
+    if (this.action instanceof Fly) this.action.typing = on;
+  }
+  helperFinish() {
+    if (this.action instanceof Fly) {
+      this.action.pet = this;
+      this.action.finish();
+    }
+  }
+  get flying() {
+    return this.action instanceof Fly;
+  }
+  nozzleWorld() {
+    const J = this.J;
+    const sk = this.character.skel;
+    const back = Math.min(sk.torso.shoulders.F[0], sk.torso.shoulders.N[0]) - 6;
+    const [u, v] = rotPt([back, -8], J.lean);
+    return this.toWorld(J.hip[0] + u, J.hip[1] + v);
+  }
+
   // ── brain: pick what to do next ──────────────────────────────────────────
   think() {
     const W = this.world.width;
     const H = this.H;
-    if (this.settings.paused) {
+    if (this.settings.paused || this.helperActive) {
       this.queue.push(chance(0.5) ? new Idle({ dur: rand(3, 6) }) : new Sit({ dur: rand(6, 10) }));
       return;
     }
@@ -950,7 +1139,7 @@ export class Pet {
 
   maybeChase(dt) {
     const f = clamp(this.settings.chaseFrequency ?? 0.5, 0, 1);
-    if (f <= 0 || this.settings.paused || this.conversing) return;
+    if (f <= 0 || this.settings.paused || this.conversing || this.helperActive) return;
     this.chaseCooldown -= dt;
     if (this.chaseCooldown > 0 || this.mode !== 'ground') return;
     if (this.action && !(this.action instanceof Idle || this.action instanceof Walk || this.action instanceof Sit)) return;
@@ -1030,6 +1219,8 @@ export class Pet {
       }
       case 'climb':
         break;
+      case 'fly':
+        break;
       case 'held':
         break;
       case 'hang': {
@@ -1044,7 +1235,13 @@ export class Pet {
         break;
       }
     }
-    if (this.mode !== 'held' && this.mode !== 'hang') this.x = clamp(this.x, H * 0.2, W - H * 0.2);
+    if (this.mode !== 'held' && this.mode !== 'hang' && this.mode !== 'fly') this.x = clamp(this.x, H * 0.2, W - H * 0.2);
+    // jetpack fades away after landing
+    if (this.jetpackOff && this.mode === 'ground') {
+      this.jetpack = Math.max(0, (this.jetpack || 0) - dt * 3);
+      this.thrust = 0;
+      if (this.jetpack <= 0) this.jetpackOff = this.jetpackOn = false;
+    } else if (this.jetpackOff) this.thrust = lerp(this.thrust || 0, 0.25, damp(4, dt));
     if (this.landT > 0) this.landT -= dt;
 
     this.updateAnimation(dt);
@@ -1105,7 +1302,7 @@ export class Pet {
     const k = this.k;
     const p = this.pose;
     // shadow on whatever is below
-    if (this.mode !== 'hang' && this.mode !== 'held' && this.mode !== 'climb') {
+    if (this.mode !== 'hang' && this.mode !== 'held' && this.mode !== 'climb' && this.mode !== 'fly') {
       const below = this.platform || this.world.findLanding(this.x, this.y, this.world.height + 1) || this.world.ground;
       const h = Math.max(0, below.y - this.y);
       const s = clamp(1 - h / (this.H * 3), 0.25, 1);
@@ -1126,6 +1323,7 @@ export class Pet {
       ctx.translate(-p.pivot[0], -p.pivot[1]);
     }
     ctx.scale(p.sx, p.sy);
+    if (this.jetpack > 0) drawJetpack(ctx, this, this.time);
     this.character.draw(ctx, p, this.J);
     ctx.restore();
 
@@ -1138,6 +1336,68 @@ export class Pet {
   }
 }
 
+/** Rocket pack on his back with animated flames (character units). */
+function drawJetpack(ctx, pet, t) {
+  const J = pet.J;
+  const sk = pet.character.skel;
+  const back = Math.min(sk.torso.shoulders.F[0], sk.torso.shoulders.N[0]) - 3;
+  const s = pet.jetpack;
+  ctx.save();
+  ctx.translate(J.hip[0], J.hip[1]);
+  ctx.rotate(J.lean);
+  ctx.translate(back, -22);
+  ctx.scale(s, s);
+  const thrust = pet.thrust || 0;
+  // flames
+  if (thrust > 0.05) {
+    for (const nx of [-4, 3]) {
+      const len = (10 + 16 * thrust) * (0.8 + 0.4 * Math.random());
+      const g = ctx.createLinearGradient(0, 16, 0, 16 + len);
+      g.addColorStop(0, 'rgba(255,255,220,0.95)');
+      g.addColorStop(0.3, 'rgba(255,200,60,0.9)');
+      g.addColorStop(0.7, 'rgba(255,90,30,0.75)');
+      g.addColorStop(1, 'rgba(255,40,20,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath();
+      ctx.moveTo(nx - 3, 16);
+      ctx.quadraticCurveTo(nx - 2.5, 16 + len * 0.6, nx + Math.sin(t * 40 + nx) * 1.2, 16 + len);
+      ctx.quadraticCurveTo(nx + 2.5, 16 + len * 0.6, nx + 3, 16);
+      ctx.fill();
+    }
+  }
+  // tanks
+  ctx.lineWidth = 1.1;
+  ctx.strokeStyle = '#0a0a0c';
+  for (const [x, col] of [[-4, '#c7372f'], [3, '#e0473d']]) {
+    const g = ctx.createLinearGradient(x - 4, 0, x + 4, 0);
+    g.addColorStop(0, col);
+    g.addColorStop(0.45, '#ff8a7a');
+    g.addColorStop(1, '#8e1f1a');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.roundRect(x - 4, -14, 8, 28, 4);
+    ctx.fill();
+    ctx.stroke();
+    ctx.fillStyle = '#5a5f66';
+    ctx.beginPath();
+    ctx.moveTo(x - 2.6, 13);
+    ctx.lineTo(x + 2.6, 13);
+    ctx.lineTo(x + 3.4, 17);
+    ctx.lineTo(x - 3.4, 17);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  }
+  // strap + fin
+  ctx.fillStyle = '#2b2a30';
+  ctx.fillRect(-8, -6, 16, 3);
+  ctx.fillStyle = '#ffd34d';
+  ctx.beginPath();
+  ctx.arc(-0.5, -9, 1.6, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.restore();
+}
+
 /** Adapt a sitting pose to sit on the floor (legs straight out) instead of on a ledge. */
 function floorSit(p) {
   p.bodyY = 33;
@@ -1145,4 +1405,4 @@ function floorSit(p) {
   p.leg.F = [1.42, -0.05];
 }
 
-export const _test = { Idle, Walk, Jump, Climb, Chase, Held, Emote, Converse, Sit, Sleep, Fall, GRAVITY };
+export const _test = { Idle, Walk, Jump, Climb, Chase, Held, Emote, Converse, Sit, Sleep, Fall, Fly, GRAVITY };

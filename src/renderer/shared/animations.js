@@ -323,6 +323,58 @@ export const ANIMS = {
     if (c.target && c.skel) aimArm(p, c.skel, 'N', [c.target[0], c.target[1] + 2.5 * Math.sin(t * 16)]);
     else p.arm.N = [1.5, 0.2 + 0.25 * Math.sin(t * 16)];
   },
+  // ── jetpack / helper poses ──
+  fly(p, t, c) {
+    p.grounded = false;
+    p.leg.N = [-0.35 + 0.12 * S(t * 9), -0.5];
+    p.leg.F = [-0.15 + 0.12 * S(t * 9 + 2), -0.7];
+    p.arm.N = [1.1, 0.5];
+    p.arm.F = [0.9, 0.6];
+    p.hand.N = p.hand.F = 'fist';
+    p.mouthShape = 'grin';
+    p.mouth = 0.4;
+    p.lean = 0.1;
+    p.rot = c.swing || 0;
+    p.pivot = [0, -45];
+  },
+  hover(p, t, c) {
+    p.grounded = false;
+    p.leg.N = [0.15 * S(t * 3), -0.35 + 0.1 * S(t * 3)];
+    p.leg.F = [-0.1 + 0.15 * S(t * 3 + 1), -0.45];
+    lapelArms(p, t);
+    p.lapel = 'both';
+    p.bodyY = 1.2 * S(t * 4);
+  },
+  reach(p, t, c) {
+    ANIMS.hover(p, t, c);
+    p.lapel = 'F';
+    p.hand.N = c.press ? 'fist' : 'open';
+    p.eyes = 'open';
+    p.mouthShape = 'grit';
+    if (c.target && c.skel) aimArm(p, c.skel, 'N', c.target);
+    else p.arm.N = [1.5, 0.1];
+  },
+  point(p, t, c) {
+    ANIMS.reach(p, t, c);
+    p.hand.N = 'fist';
+    p.mouthShape = 'talk';
+    p.mouth = 0.3 + 0.3 * pos(S(t * 9));
+  },
+  typing(p, t, c) {
+    ANIMS.hover(p, t, c);
+    p.lapel = null;
+    p.arm.N = [1.25, 1.0 + 0.25 * S(t * 30)];
+    p.arm.F = [1.15, 1.05 + 0.25 * S(t * 30 + 1.5)];
+    p.hand.N = p.hand.F = 'fist';
+    p.lean = 0.12;
+    p.eyes = 'open';
+    p.mouthShape = 'grit';
+  },
+  scrolling(p, t, c) {
+    ANIMS.reach(p, t, c);
+    if (c.target && c.skel) aimArm(p, c.skel, 'N', [c.target[0], c.target[1] + 3 * S(t * 14)]);
+    p.hand.N = 'open';
+  },
   hang(p, t, c) {
     p.grounded = false;
     p.arm.N = [Math.PI - 0.08, 0];

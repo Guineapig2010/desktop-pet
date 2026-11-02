@@ -10,6 +10,8 @@ import { Secrets } from './secrets.js';
 import { WindowTracker } from './windowTracker.js';
 import { Restraint } from './restraint.js';
 import { personaPrompt, chatAnthropic, chatOpenAICompatible, offlineReply, explainError } from './ai.js';
+import { HelperController } from './helper/index.js';
+import { input as realInput } from './helper/input.js';
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(here, '../..');
@@ -30,7 +32,10 @@ if (!app.requestSingleInstanceLock()) {
   process.exit(0);
 }
 
-let settings, storyStore, chatStore, secrets, tracker, restraint;
+let settings, storyStore, chatStore, secrets, tracker, restraint, helper;
+let latestWindows = []; // global coordinates, front to back
+let overlayDisplayOverride = null;
+let lastSharing = false;
 let overlay = null, chatWin = null, settingsWin = null, importerWin = null, tray = null;
 let petState = {};
 let cursorTimer = null;
@@ -53,7 +58,7 @@ function iconImage(name) {
 }
 
 function targetDisplay() {
-  const id = settings.get().displayId;
+  const id = overlayDisplayOverride ?? settings.get().displayId;
   return screen.getAllDisplays().find((d) => d.id === id) || screen.getPrimaryDisplay();
 }
 
@@ -133,6 +138,7 @@ function startCursorPolling() {
 }
 
 function onWindows(list) {
+  latestWindows = list;
   const o = overlayOrigin();
   sendOverlay(
     'windows',
@@ -166,6 +172,7 @@ function openChat() {
     webPreferences: { preload: PRELOAD, contextIsolation: true, sandbox: true },
   });
   chatWin.setAlwaysOnTop(true, 'floating', 1);
+  if (helper?.source) chatWin.setContentProtection(true);
   chatWin.loadFile(path.join(RENDERER, 'chat/index.html'));
   chatWin.once('ready-to-show', () => chatWin.show());
   const saveBounds = () => {
@@ -244,6 +251,8 @@ function petMenuTemplate() {
     { label: 'Talk about Albuquerque', click: () => command('talk') },
     { label: 'Chase my cursor!', click: () => command('chase') },
     { label: 'Call Doe the robot over', click: () => command('doe') },
+    { label: 'Personal Helper: share my screen…', click: () => openChat()?.webContents.send('helper:open-picker') },
+    ...(helper?.source ? [{ label: 'Stop screen sharing', click: () => helper.stopSharing() }] : []),
     { type: 'separator' },
     { label: 'Bigger', click: () => applySettings({ size: Math.min(3, Math.round(s.size * 1.15 * 100) / 100) }) },
     { label: 'Smaller', click: () => applySettings({ size: Math.max(0.4, Math.round((s.size / 1.15) * 100) / 100) }) },
@@ -409,6 +418,7 @@ function registerIpc() {
   }));
   ipcMain.on('set-interactive', (e, on) => {
     if (!overlay || e.sender !== overlay.webContents) return;
+    if (on && helper?.guarding) return; // never let the pet's stage catch a click he is performing
     overlay.setIgnoreMouseEvents(!on, { forward: true });
   });
   ipcMain.handle('settings:get', () => settings.get());
@@ -511,6 +521,19 @@ function registerIpc() {
     if (/^https:\/\//.test(url)) shell.openExternal(url);
   });
 
+  // personal helper
+  ipcMain.on('helper:event', (e, { name, data }) => helper.onOverlayEvent(name, data));
+  ipcMain.handle('helper:state', () => helper.state());
+  ipcMain.handle('helper:sources', () => helper.sources());
+  ipcMain.handle('helper:share', (e, src) => helper.share(src));
+  ipcMain.handle('helper:stop', () => helper.stopSharing());
+  ipcMain.handle('helper:cancel', () => helper.cancel('stop button'));
+  ipcMain.handle('helper:live', (e, on) => helper.setLive(on));
+  ipcMain.handle('helper:ask', (e, { text, mode }) => helper.ask({ text, mode }));
+  ipcMain.handle('helper:confirm-reply', (e, { id, ok }) => helper.answerConfirm(id, ok));
+  ipcMain.handle('helper:permissions', () => helper.permissions());
+  ipcMain.handle('helper:open-permission', (e, kind) => helper.openPermission(kind));
+
   // photo importer
   ipcMain.handle('importer:choose', async () => {
     const r = await dialog.showOpenDialog(importerWin || undefined, {
@@ -590,6 +613,9 @@ function installTestHooks() {
     quit: quitApp,
     windows: () => BrowserWindow.getAllWindows().map((w) => ({ title: w.getTitle(), visible: w.isVisible(), url: w.webContents.getURL() })),
     restraint: () => restraint,
+    helper: () => helper,
+    pressKey: (k) => realInput.key(k),
+    latestWindows: () => latestWindows,
   };
   // record the ignore-mouse state for assertions
   const orig = BrowserWindow.prototype.setIgnoreMouseEvents;
@@ -626,6 +652,35 @@ app.whenReady().then(() => {
     },
   });
   restraint = new Restraint({ helperDir: HELPERS, onEnded: (reason) => sendOverlay('restraint-ended', { reason }) });
+  helper = new HelperController({
+    rendererDir: RENDERER,
+    preload: PRELOAD,
+    isMac,
+    getOverlay: () => overlay,
+    ourWindows: () => [overlay, chatWin, settingsWin, importerWin, helper?.indicator].filter((w) => w && !w.isDestroyed()),
+    sendOverlay: (cmd, data) => command(cmd, data),
+    appendChat,
+    openChat: () => openChat(),
+    settings: () => settings.get(),
+    secrets,
+    aiStatus,
+    explainError: (e) => explainError(e, aiStatus().provider),
+    latestWindows: () => latestWindows,
+    recentChat: (n) => chatStore.get().messages.filter((m) => (m.role === 'user' || m.role === 'assistant') && m.source !== 'scripted').slice(-n).map((m) => ({ role: m.role, text: m.text })),
+    moveOverlayTo: (displayId) => {
+      if (displayId === targetDisplay().id) return;
+      overlayDisplayOverride = displayId;
+      fitOverlay();
+    },
+    broadcast: (ch, d) => {
+      broadcast(ch, d);
+      if (ch === 'helper:status' && d.sharing !== lastSharing) {
+        lastSharing = d.sharing;
+        refreshMenus();
+      }
+    },
+    log,
+  });
 
   if (isMac) {
     const dockIcon = iconImage('icon.png');
@@ -660,6 +715,11 @@ app.on('before-quit', () => {
   clearInterval(cursorTimer);
   tracker?.stop();
   restraint?.dispose();
+  try {
+    helper?.stopSharing();
+  } catch {
+    /* quitting */
+  }
   settings?.saveNow();
   storyStore?.saveNow();
   chatStore?.saveNow();

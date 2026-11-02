@@ -1,8 +1,15 @@
 // Minimal mock of the Anthropic Messages API (streaming) and an OpenAI-compatible endpoint.
 import http from 'node:http';
 
+/** Width/height of a base64 PNG (from its IHDR chunk). */
+export function pngSize(b64) {
+  const buf = Buffer.from(b64.slice(0, 64), 'base64');
+  return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20) };
+}
+
 export function startMockAI() {
   const requests = [];
+  const mock = { helper: null, problems: [] };
   const server = http.createServer((req, res) => {
     let body = '';
     req.on('data', (d) => (body += d));
@@ -14,6 +21,21 @@ export function startMockAI() {
         if (key !== 'sk-ant-test-key') {
           res.writeHead(401, { 'content-type': 'application/json' });
           return res.end(JSON.stringify({ type: 'error', error: { type: 'authentication_error', message: 'invalid x-api-key' } }));
+        }
+        if (Array.isArray(json.tools) && json.tools.some((t) => t.type === 'computer_toolset_20260801')) {
+          // validate the agent loop's tool results
+          const last = json.messages.at(-1);
+          if (Array.isArray(last.content)) {
+            for (const r of last.content.filter((c) => c.type === 'tool_result')) {
+              const tu = json.messages.at(-2).content.find((c) => c.id === r.tool_use_id);
+              if (!tu) mock.problems.push(`tool_result for unknown id ${r.tool_use_id}`);
+              else if (tu.toolset_name && r.toolset_name !== tu.toolset_name) mock.problems.push(`missing toolset_name on ${tu.name} result`);
+            }
+          }
+          const content = mock.helper ? mock.helper(json) : [{ type: 'text', text: 'Looks like a screen!' }];
+          const stop = content.some((c) => c.type === 'tool_use') ? 'tool_use' : 'end_turn';
+          res.writeHead(200, { 'content-type': 'application/json' });
+          return res.end(JSON.stringify({ id: `msg_${requests.length}`, type: 'message', role: 'assistant', model: json.model, content, stop_reason: stop, stop_sequence: null, usage: { input_tokens: 100, output_tokens: 20 } }));
         }
         res.writeHead(200, { 'content-type': 'text/event-stream' });
         const ev = (type, data) => res.write(`event: ${type}\ndata: ${JSON.stringify({ type, ...data })}\n\n`);
@@ -35,5 +57,5 @@ export function startMockAI() {
       res.end();
     });
   });
-  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve({ server, port: server.address().port, requests })));
+  return new Promise((resolve) => server.listen(0, '127.0.0.1', () => resolve(Object.assign(mock, { server, port: server.address().port, requests }))));
 }

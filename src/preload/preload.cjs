@@ -22,6 +22,7 @@ contextBridge.exposeInMainWorld('buddy', {
   chatAppend: (m) => ipcRenderer.send('chat:append', m),
   chatAnswered: (r) => ipcRenderer.send('chat:answered', r),
   log: (msg) => ipcRenderer.send('log', String(msg)),
+  helperEvent: (name, data) => ipcRenderer.send('helper:event', { name, data }),
 
   // shared
   onSettings: on('settings'),
@@ -52,6 +53,21 @@ contextBridge.exposeInMainWorld('buddy', {
   setSecret: (name, value) => ipcRenderer.invoke('secrets:set', { name, value }),
   clearSecret: (name) => ipcRenderer.invoke('secrets:clear', name),
   secretInfo: () => ipcRenderer.invoke('secrets:info'),
+
+  // personal helper
+  helperState: () => ipcRenderer.invoke('helper:state'),
+  helperSources: () => ipcRenderer.invoke('helper:sources'),
+  helperShare: (src) => ipcRenderer.invoke('helper:share', src),
+  helperStop: () => ipcRenderer.invoke('helper:stop'),
+  helperCancel: () => ipcRenderer.invoke('helper:cancel'),
+  helperLive: (on) => ipcRenderer.invoke('helper:live', on),
+  helperAsk: (text, mode) => ipcRenderer.invoke('helper:ask', { text, mode }),
+  helperConfirmReply: (id, ok) => ipcRenderer.invoke('helper:confirm-reply', { id, ok }),
+  helperPermissions: () => ipcRenderer.invoke('helper:permissions'),
+  helperOpenPermission: (kind) => ipcRenderer.invoke('helper:open-permission', kind),
+  onHelperStatus: on('helper:status'),
+  onHelperConfirm: on('helper:confirm'),
+  onHelperOpenPicker: on('helper:open-picker'),
 
   // photo importer
   importerChoose: () => ipcRenderer.invoke('importer:choose'),

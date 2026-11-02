@@ -30,6 +30,10 @@ export class Effects {
     this.add({ type: 'steam', x: x + rand(-6, 6) * scale, y, vx: rand(-20, 20) * scale, vy: -rand(60, 110) * scale, life: rand(0.6, 0.9), size: rand(6, 10) * scale });
   }
 
+  smoke(x, y, scale) {
+    this.add({ type: 'steam', x: x + rand(-3, 3) * scale, y: y + 6 * scale, vx: rand(-25, 25) * scale, vy: rand(40, 110) * scale, life: rand(0.5, 0.9), size: rand(4, 7) * scale, smoke: true });
+  }
+
   sparkle(x, y, scale, n = 6) {
     for (let i = 0; i < n; i++) {
       const a = rand(0, TAU);
@@ -95,8 +99,8 @@ export class Effects {
           ctx.fill();
           break;
         case 'steam':
-          ctx.globalAlpha = (1 - t) * 0.85;
-          ctx.fillStyle = '#ffffff';
+          ctx.globalAlpha = (1 - t) * (p.smoke ? 0.5 : 0.85);
+          ctx.fillStyle = p.smoke ? '#9a9aa2' : '#ffffff';
           ctx.beginPath();
           ctx.arc(p.x, p.y, p.size * (0.7 + t * 1.2), 0, TAU);
           ctx.fill();

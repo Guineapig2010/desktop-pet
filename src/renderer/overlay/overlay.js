@@ -84,6 +84,7 @@ const host = {
   },
   event(name, data) {
     if (name === 'pickedUp' && conv.active) conv.abort();
+    if (name === 'helperHovering' || name === 'helperTouch') api.helperEvent(name, data);
     if (name === 'ambient' && !conv.active && speechPriority === 0) {
       if (Math.random() < 0.3) speak(deals.musing(vars()), { priority: 1 });
       else host.say(story.state.dealStatus === 'accepted' && Math.random() < 0.5 ? 'planning' : 'ambient');
@@ -185,6 +186,10 @@ async function runConversation() {
   }
   return true;
 }
+
+// ── Personal Helper: the main process drives flights; we animate and report touches ──
+const helper = { active: false };
+const HELPER_QUIPS = ['Hold my watch chain!', 'Jetpack: engaged!', 'Fok Airlines, now departing!', 'Stand back, professional at work.', 'Wheee— I mean, very professional.'];
 
 // ── Doe the robot: visits and deal scenes ──────────────────────────────────
 const doe = {
@@ -373,6 +378,10 @@ function frame(now) {
     });
   }
 
+  if (helper.active) {
+    conv.nextAt = Math.max(conv.nextAt, now / 1000 + 30);
+    doe.nextAt = Math.max(doe.nextAt, now / 1000 + 60);
+  }
   if (!conv.active && !settings.paused && now / 1000 > conv.nextAt) {
     runConversation().then((ok) => {
       if (!ok) conv.nextAt = now / 1000 + 5; // he was busy; try again shortly
@@ -567,6 +576,34 @@ api.onCommand(async ({ cmd, data }) => {
       init.character = data;
       await loadCharacter(data);
       break;
+    case 'helper:active':
+      helper.active = !!data.on;
+      pet.helperActive = helper.active;
+      if (helper.active && conv.active) conv.abort();
+      if (helper.active && robot.present) robot.leave();
+      break;
+    case 'helper:fly': {
+      const wasFlying = pet.flying;
+      pet.helperFly(data);
+      if (!wasFlying && Math.random() < 0.5) speak(pick(HELPER_QUIPS), { priority: 2 });
+      break;
+    }
+    case 'helper:reach':
+      pet.helperReach(data.id);
+      break;
+    case 'helper:pressed':
+      pet.helperPressed();
+      sound.play('knock');
+      break;
+    case 'helper:typing':
+      pet.helperTyping(!!data.on);
+      break;
+    case 'helper:finish':
+      pet.helperFinish();
+      break;
+    case 'helper:say':
+      speak(data.text, { priority: 2, mood: data.mood || 'chat' });
+      break;
     case 'chatUserMessage': {
       // typing an answer in the chat counts as answering his question
       const ids = bubble.pendingChoiceIds;
@@ -603,6 +640,8 @@ setInterval(() => {
     y: Math.round(pet.y),
     mode: pet.mode,
     action: pet.action?.constructor?.name || null,
+    flyPhase: pet.action?.phase && pet.flying ? pet.action.phase : null,
+    jetpack: Math.round((pet.jetpack || 0) * 100) / 100,
     anim: pet.animName,
     platform: pet.platform?.id || null,
     holding: pet.holdingCursor,

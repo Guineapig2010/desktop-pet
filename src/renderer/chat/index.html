@@ -24,10 +24,27 @@
       <b>Offline mode</b> — replies are scripted, not AI. <a href="#" id="setupLink">Connect an AI service</a> to really chat.
     </div>
     <main class="messages" id="messages"></main>
+    <div class="helperbar" id="helperbar">
+      <button id="shareBtn" class="hb" title="Choose a display or window he may look at">👁 Share screen…</button>
+      <span id="sharingPill" class="pill hidden"><span class="rec"></span><span id="sharingName"></span><button id="stopShare" title="Stop sharing">✕</button></span>
+      <button id="askScreen" class="hb primary" title="Send a screenshot of what you shared with your question">📸 Ask about my screen</button>
+      <span class="seg" title="Explain the steps, or let him do them">
+        <button id="modeExplain" class="on">Explain</button><button id="modeDo">Do it</button>
+      </span>
+      <label class="live" title="Live assistance: every message you send includes a fresh screenshot"><input type="checkbox" id="liveToggle" /> Live</label>
+    </div>
     <footer class="composer">
       <textarea id="input" rows="1" placeholder="Ask him anything…" maxlength="4000"></textarea>
       <button id="send" class="send" title="Send (Enter)">Send</button>
     </footer>
+  </div>
+  <div class="modal hidden" id="picker">
+    <div class="sheet">
+      <div class="sheet-head"><b>What may General Fok look at?</b><button id="pickerClose" class="icon">×</button></div>
+      <p class="sheet-hint">Pick ONE display or window. He only sees what you pick, and screenshots are sent to your AI service only when you ask him something (or while Live is on). A red bar shows while sharing, with a Stop button.</p>
+      <div id="permNote" class="perm hidden"></div>
+      <div class="grid" id="sources"><div class="empty">Loading…</div></div>
+    </div>
   </div>
   <script type="module" src="chat.js"></script>
 </body>

@@ -1,0 +1,33 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'" />
+  <title>General Fok can see your screen</title>
+  <style>
+    html, body { margin: 0; background: transparent; font: 600 12.5px/1.2 -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif; user-select: none; }
+    .bar { position: fixed; inset: 4px; display: flex; align-items: center; gap: 9px; padding: 0 6px 0 12px; border-radius: 999px; background: rgba(28, 22, 26, 0.94); color: #fff; border: 1.5px solid #e0473d; box-shadow: 0 4px 16px rgba(0,0,0,0.35); -webkit-app-region: drag; }
+    .dot { width: 10px; height: 10px; border-radius: 50%; background: #ff4a3d; box-shadow: 0 0 8px #ff4a3d; animation: pulse 1.2s infinite; flex: none; }
+    @keyframes pulse { 50% { opacity: 0.35; } }
+    .text { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+    .text small { display: block; font-weight: 500; color: #f6c9c3; font-size: 11px; overflow: hidden; text-overflow: ellipsis; }
+    .live { font-size: 10px; padding: 2px 6px; border-radius: 6px; background: #e0473d; display: none; }
+    .live.on { display: inline-block; }
+    button { -webkit-app-region: no-drag; border: none; border-radius: 999px; padding: 6px 12px; font: inherit; cursor: pointer; background: #e0473d; color: #fff; }
+    button:hover { background: #ff5c50; }
+    button.ghost { background: #3a3036; }
+    button.ghost:hover { background: #4a3e45; }
+    #cancel { display: none; }
+  </style>
+</head>
+<body>
+  <div class="bar">
+    <span class="dot"></span>
+    <span class="text"><span id="title">General Fok can see your screen</span><small id="activity">Esc stops him any time</small></span>
+    <span class="live" id="live">LIVE</span>
+    <button class="ghost" id="cancel" title="Cancel the current task (Esc)">Cancel</button>
+    <button id="stop" title="Stop sharing your screen">Stop</button>
+  </div>
+  <script type="module" src="indicator.js"></script>
+</body>
+</html>

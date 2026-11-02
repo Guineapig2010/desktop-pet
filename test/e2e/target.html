@@ -1,0 +1,23 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Target App</title>
+<style>
+  body { margin: 0; font: 15px sans-serif; background: #f4f1ea; }
+  button { position: absolute; width: 140px; height: 44px; font-size: 15px; }
+  #settings { left: 40px; top: 40px; background: #3fb6a8; color: #fff; }
+  #send { left: 260px; top: 40px; background: #e0574a; color: #fff; }
+  #name { position: absolute; left: 40px; top: 130px; width: 360px; height: 34px; font-size: 16px; }
+  #list { position: absolute; left: 40px; top: 200px; width: 360px; height: 160px; overflow-y: scroll; background: #fff; border: 1px solid #999; }
+  #list div { height: 40px; border-bottom: 1px solid #ddd; padding-left: 8px; line-height: 40px; }
+</style></head>
+<body>
+  <button id="settings">Settings</button>
+  <button id="send">Send message</button>
+  <input id="name" placeholder="Your name" />
+  <div id="list"></div>
+  <script>
+    window.clicks = { settings: 0, send: 0 };
+    settings.onclick = () => window.clicks.settings++;
+    send.onclick = () => window.clicks.send++;
+    for (let i = 0; i < 40; i++) { const d = document.createElement('div'); d.textContent = 'Row ' + (i + 1); list.appendChild(d); }
+  </script>
+</body></html>

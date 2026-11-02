@@ -9,7 +9,8 @@
     "start": "electron .",
     "test": "node --test test/unit/*.test.mjs",
     "test:e2e": "node test/e2e/run-e2e.mjs",
-    "package:mac": "electron-packager . \"Albuquerque Buddy\" --platform=darwin --overwrite --out=dist --icon=assets/icon.icns --ignore=\"^/(dist|test|docs)\""
+    "package:mac": "electron-packager . \"Albuquerque Buddy\" --platform=darwin --overwrite --out=dist --icon=assets/icon.icns --ignore=\"^/(dist|test|docs)\"",
+    "test:helper": "node test/e2e/helper-e2e.mjs"
   },
   "license": "MIT",
   "dependencies": {
