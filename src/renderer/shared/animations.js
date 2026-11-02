@@ -312,6 +312,17 @@ export const ANIMS = {
     p.leg.N = [0.3 * pos(S(t * 9)), -0.6 * pos(S(t * 9))];
     p.leg.F = [0.3 * pos(-S(t * 9)), -0.6 * pos(-S(t * 9))];
   },
+  handshake(p, t, c) {
+    lapelArms(p, t);
+    p.lapel = 'F';
+    p.hand.N = 'grab';
+    p.eyes = 'happy';
+    p.mouthShape = 'grin';
+    p.mouth = 0.5;
+    p.lean = 0.06;
+    if (c.target && c.skel) aimArm(p, c.skel, 'N', [c.target[0], c.target[1] + 2.5 * Math.sin(t * 16)]);
+    else p.arm.N = [1.5, 0.2 + 0.25 * Math.sin(t * 16)];
+  },
   hang(p, t, c) {
     p.grounded = false;
     p.arm.N = [Math.PI - 0.08, 0];

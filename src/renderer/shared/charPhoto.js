@@ -79,10 +79,11 @@ export class PhotoCharacter {
 
   /** Called on each target pose: stances that mimic the photo use the photo's real angles. */
   adjustPose(p, animName) {
-    if (p.lapel) {
+    if (p.lapel && p.lapel !== 'F') {
       p.arm.N = [...this.restArms.N];
       if (p.lapel === 'both') p.arm.F = [...this.restArms.F];
     }
+    if (p.lapel === 'F') p.arm.F = [...this.restArms.F];
     if (['idle', 'idleRelax', 'lookAround', 'notice', 'talk', 'wave', 'pitch', 'knock', 'shrug', 'facepalm', 'dramatic'].includes(animName)) {
       // stand the way he stands in the photo
       p.leg.N = [this.restLegs.N[0] + p.leg.N[0] * 0.5, this.restLegs.N[1] + p.leg.N[1]];

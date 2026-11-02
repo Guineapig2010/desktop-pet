@@ -251,7 +251,7 @@ class Converse extends Action {
     return !p.conversing;
   }
   anim(p) {
-    return { name: p.convAnim || 'talk', ctx: { floor: p.platform?.kind === 'ground' } };
+    return { name: p.convAnim || 'talk', ctx: { floor: p.platform?.kind === 'ground', ...(p.convCtx || {}) } };
   }
 }
 

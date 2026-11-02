@@ -243,6 +243,7 @@ function petMenuTemplate() {
     { label: 'Chat with him…', click: openChat },
     { label: 'Talk about Albuquerque', click: () => command('talk') },
     { label: 'Chase my cursor!', click: () => command('chase') },
+    { label: 'Call Doe the robot over', click: () => command('doe') },
     { type: 'separator' },
     { label: 'Bigger', click: () => applySettings({ size: Math.min(3, Math.round(s.size * 1.15 * 100) / 100) }) },
     { label: 'Smaller', click: () => applySettings({ size: Math.max(0.4, Math.round((s.size / 1.15) * 100) / 100) }) },

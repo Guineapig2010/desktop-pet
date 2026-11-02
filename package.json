@@ -18,5 +18,10 @@
   "devDependencies": {
     "@electron/packager": "^20.3.0",
     "electron": "^45.2.1"
+  },
+  "optionalDependencies": {
+    "@nut-tree-fork/libnut-darwin": "^2.7.5",
+    "@nut-tree-fork/libnut-linux": "^2.7.5",
+    "@nut-tree-fork/libnut-win32": "^2.7.5"
   }
 }

@@ -101,6 +101,10 @@ export class Sound {
   /** Gibberish voice, one blip per couple of letters (pitch varies with mood). */
   babble(ch, mood = 'normal') {
     if (!this.enabled || this.volume <= 0) return;
+    if (mood === 'robot') {
+      const f = 520 + ((ch.toLowerCase().charCodeAt(0) * 53) % 5) * 95;
+      return this.tone({ type: 'square', f0: f, f1: f, dur: 0.045, gain: 0.05 });
+    }
     const base = mood === 'furious' ? 150 : mood === 'annoyed' ? 130 : mood === 'dramatic' ? 115 : 105;
     const f = base + ((ch.toLowerCase().charCodeAt(0) * 37) % 60);
     this.tone({ type: mood === 'furious' ? 'sawtooth' : 'triangle', f0: f, f1: f * 0.92, dur: 0.06, gain: mood === 'furious' ? 0.09 : 0.11 });

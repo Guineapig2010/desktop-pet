@@ -1,7 +1,8 @@
 // Comic speech bubble that follows his head, types text out, and can offer answer buttons.
 
 export class Bubble {
-  constructor(root) {
+  constructor(root, extraClass = '') {
+    this.extraClass = extraClass;
     this.el = document.createElement('div');
     this.el.className = 'bubble hidden';
     this.el.innerHTML = '<div class="bubble-text"></div><div class="bubble-choices"></div><div class="bubble-timer"></div><div class="bubble-tail"></div>';
@@ -25,7 +26,7 @@ export class Bubble {
   say(text, { mood = 'normal', speed = 42, onChar } = {}) {
     this.cancelTyping();
     this.clearChoices();
-    this.el.className = `bubble mood-${mood}`;
+    this.el.className = `bubble mood-${mood} ${this.extraClass}`;
     this.visible = true;
     this.textEl.textContent = '';
     this.fullText = text;

@@ -93,7 +93,7 @@ try {
     const s = await waitFor(async () => { const st = await state(); return st.platform ? st : null; }, { what: 'state report' });
     const b = await T(() => globalThis.__buddyTest.overlayBounds());
     // deterministic test run: no spontaneous conversations or chases (we trigger them explicitly)
-    await T(() => globalThis.__buddyTest.applySettings({ dialogueFrequency: 0, chaseFrequency: 0 }));
+    await T(() => globalThis.__buddyTest.applySettings({ dialogueFrequency: 0, chaseFrequency: 0, doeFrequency: 0 }));
     assert.equal(s.platform, 'ground');
     assert.equal(s.y, b.height);
   });
@@ -332,6 +332,39 @@ try {
     await B(() => window.__buddy.bubble.pick('ignore'));
     await waitFor(async () => (await B(() => window.__buddy.story.state.ignores)) === 1, { what: 'ignore counted' });
     await finishConversation();
+  });
+
+  await step('Doe the robot rolls in, General Fok haggles with him, then Doe rolls away', async () => {
+    await setCursor(b.x + 5, b.y + 5);
+    await waitFor(
+      async () => {
+        await T(() => globalThis.__buddyTest.command('doe'));
+        await sleep(400);
+        return (await B(() => window.__buddy.conv.kind === 'doe')) || null;
+      },
+      { what: 'doe scene to start', timeout: 20000, interval: 700 },
+    );
+    const seen = { doeLines: new Set(), fokLines: new Set(), anims: new Set() };
+    await waitFor(
+      async () => {
+        const st = await state();
+        if (st.doe?.bubble) seen.doeLines.add(st.doe.bubble);
+        if (st.bubble) seen.fokLines.add(st.bubble);
+        seen.anims.add(st.anim);
+        if (st.doe && st.doe.bubble && !seen.shot) {
+          seen.shot = true;
+          await overlay.screenshot({ path: path.join(shots, 'overlay-doe.png') });
+        }
+        // answer any "is it a fair deal?" question
+        await B(() => window.__buddy.bubble.pendingChoiceIds.length && window.__buddy.bubble.pick('fair'));
+        return !st.conversing && seen.doeLines.size > 0 ? st : null;
+      },
+      { what: 'doe scene to finish', timeout: 120000, interval: 150 },
+    );
+    assert.ok(seen.doeLines.size >= 2, `Doe should talk: ${[...seen.doeLines]}`);
+    assert.ok([...seen.doeLines].every((l) => l === l.toUpperCase()), 'Doe talks in caps');
+    assert.ok(seen.fokLines.size >= 2);
+    await waitFor(async () => !(await state()).doe, { what: 'doe leaves', timeout: 20000 });
   });
 
   let chat;

@@ -78,3 +78,5 @@ body.dragging #stage { cursor: grabbing; }
   opacity: 0.25;
   transform-origin: left center;
 }
+
+.bubble.robot { background: #e3fffb; font-family: "Menlo", "SF Mono", "Courier New", monospace; font-size: 13px; font-weight: 700; letter-spacing: 0.3px; border-radius: 6px; }

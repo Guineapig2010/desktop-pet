@@ -10,6 +10,7 @@ const sliders = {
   chaseFrequency: (v) => (v == 0 ? 'never' : v < 0.3 ? 'rarely' : v < 0.7 ? 'sometimes' : 'often'),
   dialogueFrequency: (v) => (v == 0 ? 'never' : v < 0.3 ? 'rarely' : v < 0.7 ? 'sometimes' : 'often'),
   volume: (v) => `${Math.round(v * 100)}%`,
+  doeFrequency: (v) => (v == 0 ? 'never' : v < 0.3 ? 'rarely' : v < 0.7 ? 'sometimes' : 'often'),
 };
 const checks = ['paused', 'sound', 'useWindows', 'cursorRestraint', 'lowPower', 'showInDock'];
 
@@ -76,6 +77,7 @@ $('testAi').addEventListener('click', async () => {
 $('talkBtn').addEventListener('click', () => api.petCommand('talk'));
 $('chaseBtn').addEventListener('click', () => api.petCommand('chase'));
 $('summonBtn').addEventListener('click', () => api.petCommand('summon'));
+$('doeBtn').addEventListener('click', () => api.petCommand('doe'));
 $('importBtn').addEventListener('click', () => api.openImporter());
 $('resetStory').addEventListener('click', async () => {
   await api.resetStory();

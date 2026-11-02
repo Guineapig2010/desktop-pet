@@ -59,6 +59,7 @@ export const DEFAULT_SETTINGS = {
   speed: 1,
   chaseFrequency: 0.5,
   dialogueFrequency: 0.5,
+  doeFrequency: 0.5,
   sound: true,
   volume: 0.5,
   paused: false,
